@@ -8,6 +8,8 @@ type User = {
   profile_image: string;
   created_at: Date;
   updated_at: Date;
+  otp: string;
+  otp_expires: Date;
 };
 
 export type { User };

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import bg from "../../../assets/loginbg.jpg";
 import { useNavigate } from "react-router-dom";
 
@@ -81,12 +81,12 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   return (
     <div className="animate-flicker" style={styles.container}>
-      <div style={styles.overlay}></div>
+      <div style={styles.overlay} />
 
       {/* Animated Random Lines */}
       {[...Array(15)].map((_, i) => (
         <div
-          key={i}
+          key={_ + i}
           className={`line-${i}`}
           style={{
             position: "absolute",
@@ -166,12 +166,23 @@ const Login: React.FC = () => {
             {/* Buttons */}
             <div className="flex gap-4">
               <button
+                type="button"
                 style={styles.button}
                 onClick={() => navigate("/signup")}
                 onMouseOver={(e) => {
                   const target = e.target as HTMLButtonElement;
                   target.style.transform = "scale(1.05)";
                   target.style.backgroundColor = "#0e1b33";
+                }}
+                onFocus={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.transform = "scale(1.05)";
+                  target.style.backgroundColor = "#0e1b33";
+                }}
+                onBlur={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.transform = "scale(1)";
+                  target.style.backgroundColor = "#1c3d73";
                 }}
                 onMouseOut={(e) => {
                   const target = e.target as HTMLButtonElement;
@@ -182,6 +193,7 @@ const Login: React.FC = () => {
                 Signup
               </button>
               <button
+                type="button"
                 style={styles.button}
                 onMouseOver={(e) => {
                   const target = e.target as HTMLButtonElement;
@@ -189,6 +201,16 @@ const Login: React.FC = () => {
                   target.style.backgroundColor = "#0e1b33";
                 }}
                 onMouseOut={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.transform = "scale(1)";
+                  target.style.backgroundColor = "#1c3d73";
+                }}
+                onFocus={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.transform = "scale(1.05)";
+                  target.style.backgroundColor = "#0e1b33";
+                }}
+                onBlur={(e) => {
                   const target = e.target as HTMLButtonElement;
                   target.style.transform = "scale(1)";
                   target.style.backgroundColor = "#1c3d73";

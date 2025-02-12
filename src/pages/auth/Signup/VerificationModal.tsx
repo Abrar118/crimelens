@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import { resendOtp, verifyUser } from "@/apis/userApis";
+import { Button } from "@/components/ui/button";
+import { sendEmail } from "@/lib/send-mail";
+import type React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -31,24 +36,33 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/user/verify-phone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
-      });
+      const response = await verifyUser(email, otp);
 
-      const data = await response.json();
+      toast.success(response.message);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (response.ok) {
-        setMessage("✅ Verification successful!");
-        setTimeout(() => {
-          onClose();
-        }, 2000);
-      } else {
-        setMessage("❌ Invalid OTP, please try again.");
-      }
-    } catch (error) {
-      setMessage("⚠️ Something went wrong. Try again.");
+  const handleResendOtp = async () => {
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const response = await resendOtp(email);
+
+      sendEmail(
+        "mistdecoders@gmail.com",
+        email,
+        "OTP Verification",
+        `Your OTP is: ${response.OTP}. This will exprire in 10 minutes.`
+      );
+
+      toast.success(response.message);
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -84,21 +98,32 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
 
         {message && <p className="text-center mt-2">{message}</p>}
 
-        <div className="flex justify-center mt-4">
-          <button
-            style={styles.button}
-            className="px-5 py-2 bg-[#1c3d73] text-black font-bold rounded-md mr-2 transition-transform hover:scale-105 disabled:bg-gray-600"
-            onClick={handleVerify}
-            disabled={loading || otp.length !== 6 || !email}
+        <div className="flex flex-col justify-center mt-4">
+          <div className="flex justify-center mt-4">
+            <button
+              type="button"
+              style={styles.button}
+              className="px-5 py-2 bg-[#1c3d73] text-black font-bold rounded-md mr-2 transition-transform hover:scale-105 disabled:bg-gray-600"
+              onClick={handleVerify}
+              disabled={loading || otp.length !== 6 || !email}
+            >
+              {loading ? "Verifying..." : "Verify"}
+            </button>
+            <button
+              type="button"
+              className="px-5 py-2 bg-gray-700 rounded-md text-white"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          </div>
+          <Button
+            className="mt-4 w-full"
+            onClick={handleResendOtp}
+            variant="secondary"
           >
-            {loading ? "Verifying..." : "Verify"}
-          </button>
-          <button
-            className="px-5 py-2 bg-gray-700 rounded-md text-white"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
+            Resend OTP
+          </Button>
         </div>
       </div>
     </div>

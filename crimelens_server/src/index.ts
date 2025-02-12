@@ -1,8 +1,17 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import userController from "./controllers/userController.js";
 
-const app = new Hono();
+const app = new Hono().basePath("/api/v1");
+app.use(
+  "/*",
+  cors({
+    origin: "*",
+    allowMethods: ["GET", "POST", "PUT", "DELETE"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.route("/user", userController);
 

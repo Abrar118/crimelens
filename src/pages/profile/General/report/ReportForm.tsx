@@ -21,7 +21,7 @@ const districts = {
   Dhaka: ["Dhaka City", "Gazipur", "Narayanganj"],
   Chattogram: ["Chattogram City", "Cox’s Bazar", "Comilla"],
   Rajshahi: ["Rajshahi City", "Pabna", "Natore"],
-  Khulna: ["Khulna City", "Jessore", "Satkhira"],
+  Khulna: ["Khulna City", "Jessore", "Satkhira"], 
   Barishal: ["Barishal City", "Patuakhali", "Bhola"],
   Sylhet: ["Sylhet City", "Habiganj", "Moulvibazar"],
   Mymensingh: ["Mymensingh City", "Jamalpur", "Sherpur"],
@@ -99,11 +99,11 @@ const ReportForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white p-4 md:p-6">
+    <div className="min-h-screen bg-background text-white p-4 md:p-6">
       <div className="max-w-3xl mx-auto">
-        <Card className="bg-gray-900 border border-gray-700">
+        <Card className="bg-card">
           <CardHeader>
-            <CardTitle className="text-yellow-400 text-center text-xl md:text-2xl">
+            <CardTitle className="text-foreground text-center text-xl md:text-2xl">
               🚨 Report a Crime
             </CardTitle>
           </CardHeader>
