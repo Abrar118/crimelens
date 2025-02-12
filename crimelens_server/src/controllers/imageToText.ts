@@ -11,8 +11,8 @@ const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 // Set up multer for handling file uploads
 const upload = multer({ dest: '../../uploads/' }); // Destination directory for uploaded files
 
-// Create the Hono app
-const app = new Hono();
+// Create the Hono imageToText
+const imageToText = new Hono();
 
 // Helper function to get the mime type from base64 string
 function getMimeType(base64: string): string {
@@ -33,11 +33,11 @@ async function fetchImageBase64(imageUrl: string): Promise<string | null> {
   }
 }
 
-// POST endpoint to generate image description
-app.post('/generate-image-description', upload.single('file'), async (c) => {
+
+imageToText.post('/generate-image-description', upload.single('file'), async (c) => {
   console.log("Received image upload request.");
 
-  // Get the uploaded file
+
   const file = c.req.file();
   
   if (!file) {
@@ -62,7 +62,7 @@ app.post('/generate-image-description', upload.single('file'), async (c) => {
     const imageUrl = cloudinaryResult.secure_url; 
     console.log(`Image successfully uploaded to Cloudinary. Image URL: ${imageUrl}`);
 
-    // Generate description using Google Generative AI
+   
     const prompt = 'Describe what is in this image.';
     const base64Image = await fetchImageBase64(imageUrl);
 
@@ -77,7 +77,7 @@ app.post('/generate-image-description', upload.single('file'), async (c) => {
     const image = {
       inlineData: {
         data: base64Image,
-        mimeType: mimeType, // Dynamically set mimeType
+        mimeType: mimeType, 
       },
     };
 
@@ -88,7 +88,7 @@ app.post('/generate-image-description', upload.single('file'), async (c) => {
 
       console.log("Description generated: ", description);
 
-      // Clean up the uploaded image file from local storage
+     
       fs.unlinkSync(tempFilePath);
       console.log("Temporary file deleted.");
 
@@ -104,4 +104,4 @@ app.post('/generate-image-description', upload.single('file'), async (c) => {
   }
 });
 
-export default app;
+export default imageToText;
