@@ -8,6 +8,7 @@
     "@emailjs/browser": "^4.4.1",
     "@google-cloud/language": "^6.5.0",
     "@google-cloud/vision": "^4.3.2",
+    "@google/generative-ai": "^0.21.0",
     "@hono/node-server": "^1.13.8",
     "@huggingface/inference": "^3.3.3",
     "axios": "^1.7.9",
