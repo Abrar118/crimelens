@@ -6,14 +6,22 @@
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@google-cloud/language": "^6.5.0",
+    "@google-cloud/vision": "^4.3.2",
     "@hono/node-server": "^1.13.8",
+    "@huggingface/inference": "^3.3.3",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.7",
     "emailjs": "^4.0.3",
     "emailjs-com": "^3.2.0",
     "hono": "^4.6.20",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.13.0"
+    "mongodb": "^6.13.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.0",
+    "xhr2": "^0.2.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

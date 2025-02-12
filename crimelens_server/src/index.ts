@@ -1,10 +1,11 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import userController from "./controllers/userController.js";
-
+import fakeDetectionController from "./controllers/fakeDetectionController.ts";
 const app = new Hono();
 
 app.route("/user", userController);
+app.route("/user", fakeDetectionController);
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
