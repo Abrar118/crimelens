@@ -32,9 +32,9 @@ const formSchema = z.object({
     message: "Title must be at least 2 characters.",
   }),
   image: z
-    .instanceof(FileList)
-    .refine((files) => files.length > 0, "Image is required."),
-  video: z.instanceof(FileList).optional(),
+    .any()
+    .refine((files: FileList) => files?.length > 0, "Image is required."),
+  video: z.any().optional(),
   division: z.string({
     required_error: "Please select a division.",
   }),

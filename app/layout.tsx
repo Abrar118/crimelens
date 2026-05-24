@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider defaultTheme="dark" storageKey="crimelens-theme">
+        <ThemeProvider attribute="class" defaultTheme="dark" storageKey="crimelens-theme" enableSystem disableTransitionOnChange>
           <main className="min-h-screen flex flex-col bg-background">
             {children}
           </main>

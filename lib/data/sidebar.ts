@@ -8,13 +8,16 @@ import {
 
 export interface NavItem {
   title: string;
+  url: string;
   icon: LucideIcon;
+  isActive?: boolean;
   items: { title: string; url: string }[];
 }
 
 export const navMain: NavItem[] = [
   {
     title: "General",
+    url: "#",
     icon: SquareTerminal,
     items: [
       { title: "Dashboard", url: "/dashboard" },
@@ -24,6 +27,7 @@ export const navMain: NavItem[] = [
   },
   {
     title: "My Profile",
+    url: "#",
     icon: Bot,
     items: [
       { title: "Information", url: "/profile" },
@@ -32,6 +36,7 @@ export const navMain: NavItem[] = [
   },
   {
     title: "Alert & Update",
+    url: "#",
     icon: Bell,
     items: [
       { title: "Notification", url: "/notifications" },
@@ -40,6 +45,7 @@ export const navMain: NavItem[] = [
   },
   {
     title: "Survey",
+    url: "#",
     icon: BookOpen,
     items: [
       { title: "Heatmap", url: "/heatmap" },

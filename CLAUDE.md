@@ -4,87 +4,103 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CrimeLens is a crime reporting and community verification platform built for the NSU WebXtreme Hackathon 2025. Users report crimes with evidence (images/videos), and the community verifies reports through upvotes, downvotes, and proof-attached comments. Features include AI-generated image descriptions, OTP-based verification, crime heatmaps, leaderboards, anonymous reporting, and an admin panel.
+CrimeLens is a crime reporting and community verification platform built for the NSU WebXtreme Hackathon 2025. Users report crimes with evidence (images/videos), and the community verifies reports through upvotes, downvotes, and proof-attached comments. Features include AI-generated image descriptions, phone OTP verification, crime heatmaps, leaderboards, anonymous reporting, and an admin panel.
 
 ## Commands
 
-### Frontend (root directory)
 ```bash
-npm run dev          # Start Vite dev server (default port 5173)
-npm run host         # Start dev server with --host (LAN access)
-npm run build        # TypeScript check + Vite production build
-npm run lint         # ESLint
-npm run preview      # Preview production build
+npm run dev      # Start Next.js dev server (port 3000)
+npm run build    # Production build
+npm run start    # Start production server
+npm run lint     # ESLint
 ```
 
-### Backend (`crimelens_server/`)
-```bash
-cd crimelens_server && npm run dev   # Start Hono server with tsx watch (port 3000)
-```
-
-Both servers must run simultaneously for local development. No test framework is configured.
+Single command — no separate backend server needed. API routes run as serverless functions within Next.js.
 
 ## Architecture
 
-### Monorepo Layout
-- **Root** — React SPA frontend (Vite + React 18 + TypeScript)
-- **`crimelens_server/`** — Hono.js REST API backend
-- **`models/`** — Shared TypeScript types imported by both frontend and backend (e.g., `User` type)
-
-### Frontend Stack
-- **Router:** React Router v7 (`src/router.tsx`) — nested route tree with `ProtectedRoute` wrapper
-- **State:** Zustand with persistence (`src/lib/store.ts`) — `useAuthStore` (auth/token) and `useSidebarStore` (UI)
-- **UI:** shadcn/ui (New York style) + Radix UI primitives + Tailwind CSS + Lucide icons
-- **Forms:** React Hook Form + Zod validation
-- **HTTP:** Axios instance at `src/apis/axios.ts` — base URL `http://localhost:3000/api/v1`
-- **Maps:** Leaflet + React Leaflet (heatmap, location display)
+### Single Next.js 15 App Router Project
+- **Framework:** Next.js 15 with App Router, deployed on Vercel
+- **Auth:** Firebase Auth (email/password + phone OTP), session cookies via `middleware.ts`
+- **Database:** MongoDB Atlas (native driver, not Mongoose)
+- **Storage:** Firebase Storage (client-side direct uploads)
+- **AI:** Google Gemini 1.5 Flash for crime scene image descriptions
+- **State:** Zustand (`lib/store.ts`) — `useAuthStore` (Firebase user) and `useSidebarStore` (UI)
+- **UI:** shadcn/ui (New York style) + Radix UI + Tailwind CSS + Lucide icons
+- **Forms:** React Hook Form + Zod
+- **HTTP:** Axios with Firebase token interceptor (`lib/api/client.ts`)
+- **Maps:** Leaflet + React Leaflet (SSR-disabled via `next/dynamic`)
 - **Charts:** Recharts
-- **Path alias:** `@` maps to `src/` (configured in `vite.config.ts` and `tsconfig.app.json`)
-
-### Backend Stack
-- **Framework:** Hono.js on Node.js (`@hono/node-server`)
-- **Database:** MongoDB Atlas (native driver, not Mongoose) — collections: `users`, `posts`
-- **Auth:** JWT (access token 1h + refresh token 7d in cookies), bcrypt password hashing
-- **File storage:** Cloudinary (profile images, crime scene uploads)
-- **Email:** EmailJS (OTP delivery)
-- **Entry:** `crimelens_server/src/index.ts` — mounts all routes under `/api/v1`
+- **Path alias:** `@/*` maps to project root
 
 ### Auth Flow
-1. Register → OTP sent via EmailJS → verify OTP → login
-2. Login returns `accessToken` (localStorage) + `refreshToken` (cookie)
-3. `useAuthStore` attempts token refresh on app rehydration
-4. Protected routes use `<ProtectedRoute>` checking `isAuthenticated` from Zustand
-5. Backend `authMiddleware` validates Bearer token, sets `c.set("user", decoded)`
+1. Register via Firebase `createUserWithEmailAndPassword` → profile saved to MongoDB
+2. Phone verification via Firebase Phone Auth OTP
+3. Login via Firebase `signInWithEmailAndPassword`
+4. Session cookie set via `POST /api/v1/auth/session` (Firebase Admin `createSessionCookie`)
+5. `middleware.ts` checks session cookie for route protection
+6. API routes verify Firebase ID token via `lib/auth.ts` → `verifyAuth(request)`
+7. User roles stored as Firebase custom claims: `{ role: "unverified" | "verified" | "admin" }`
 
 ### Route Structure
 - `/` — Login
 - `/signup` — Registration
-- `/profile/*` — Protected user area (dashboard, report crime, crime feed, profile info, notifications, emergency contacts, heatmap, leaderboard)
-- `/admin/*` — Admin panel (dashboard, users, alerts, security, settings)
+- `/(dashboard)/*` — Protected user area with sidebar layout
+  - `/dashboard`, `/report`, `/crime-feed`, `/profile`, `/profile/my-reports`
+  - `/notifications`, `/emergency`, `/heatmap`, `/leaderboard`
+- `/admin/*` — Admin panel with separate layout
+  - `/admin/dashboard`, `/admin/users`, `/admin/alerts`, `/admin/security`, `/admin/settings`
 
-### Key Integrations
-- **AI image description:** Google Generative AI (Gemini 1.5 Flash) in `src/lib/AIGenerate.ts` — analyzes crime scene images and generates descriptions
-- **Location data:** Bangladesh divisions/districts from static JSON in `src/lib/data/`
-- **Deployment:** Firebase Hosting configured (`.firebaserc`, `firebase.json`) — serves from `dist/`
+### API Routes (`app/api/v1/`)
+| Route | Methods | Auth |
+|-------|---------|------|
+| `/api/v1/auth/session` | POST, DELETE | Public |
+| `/api/v1/posts` | GET, POST | Public / Verified |
+| `/api/v1/posts/[id]` | GET, DELETE | Public / Owner+Admin |
+| `/api/v1/posts/[id]/vote` | POST | Verified |
+| `/api/v1/posts/[id]/comments` | GET, POST | Public / Verified |
+| `/api/v1/posts/[id]/comments/[commentId]` | DELETE | Owner+Admin |
+| `/api/v1/users/me` | GET, POST, PUT | Authenticated |
+| `/api/v1/users/[id]` | GET | Public |
+| `/api/v1/users/[id]/posts` | GET | Public |
+| `/api/v1/admin/users` | GET | Admin |
+| `/api/v1/admin/users/[id]/ban` | POST | Admin |
+| `/api/v1/admin/posts/[id]` | DELETE | Admin |
+| `/api/v1/admin/comments/[id]` | DELETE | Admin |
+| `/api/v1/ai/describe` | POST | Verified |
 
-### API Layer
-All API functions live in `src/apis/userApis.ts`. Backend routes are mounted at `/api/v1/user` via the single controller `crimelens_server/src/controllers/userController.ts`.
+### MongoDB Collections
+- `users` — profiles keyed by Firebase UID (not ObjectId)
+- `posts` — crime reports with images, location, verification scores
+- `comments` — comments with mandatory proof attachments
+- `votes` — upvote/downvote tracking (one per user per post)
 
-### Environment Variables
-The backend requires these in a `.env` file inside `crimelens_server/`:
+### Environment Variables (`.env.local`)
 ```
-JWT_SECRET=<secret>
-JWT_REFRESH_SECRET=<secret>
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+FIREBASE_ADMIN_PRIVATE_KEY=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+MONGODB_URI=
+GOOGLE_AI_API_KEY=
 ```
 
-### User Roles
+### User Roles (Firebase Custom Claims)
 - **Unverified:** Can view posts only
 - **Verified:** Can post, comment (with proof attachment), upvote/downvote
 - **Admin:** Full access — manage users, remove posts/comments, ban users
 
 ## Conventions
 
-- shadcn/ui components live in `src/components/ui/` — add new ones with `npx shadcn@latest add <component>`
-- Dark mode is class-based via `next-themes` ThemeProvider (default theme: dark)
-- API error handling uses switch statements on `error.response.status`
+- shadcn/ui components in `components/ui/` — add with `npx shadcn@latest add <component>`
+- Client components must have `"use client"` directive
+- Dark mode is class-based via ThemeProvider (default: dark)
+- API client functions in `lib/api/` (posts.ts, comments.ts, users.ts, admin.ts)
+- Server-side auth verification via `verifyAuth()` and `requireRole()` from `lib/auth.ts`
+- Location data: Bangladesh divisions/districts from static JSON in `lib/data/`
 - Sidebar navigation groups: General, My Profile, Alert & Update, Survey
+- Leaflet maps must use `next/dynamic` with `ssr: false`
