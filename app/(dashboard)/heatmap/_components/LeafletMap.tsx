@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import Link from "next/link";
 
 export interface MapLocation {
   district: string;
@@ -27,56 +26,50 @@ function getRadius(count: number, maxCount: number): number {
 }
 
 export default function LeafletMap({ locations }: { locations: MapLocation[] }) {
-  const maxCount = Math.max(...locations.map((l) => l.count), 1);
-  const [mapKey, setMapKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
-    return () => {
-      setMapKey((k) => k + 1);
-    };
-  }, []);
+    if (!containerRef.current) return;
 
-  return (
-    <div ref={containerRef} style={{ height: "100%", width: "100%" }}>
-    <MapContainer
-      key={mapKey}
-      center={[23.685, 90.3563]}
-      zoom={7}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      />
-      {locations.map((loc) => (
-        <CircleMarker
-          key={`${loc.district}-${loc.division}`}
-          center={[loc.lat, loc.lng]}
-          radius={getRadius(loc.count, maxCount)}
-          pathOptions={{
-            color: getColor(loc.count, maxCount),
-            fillColor: getColor(loc.count, maxCount),
-            fillOpacity: 0.6,
-            weight: 2,
-          }}
-        >
-          <Popup>
-            <div className="text-sm">
-              <p className="font-bold">{loc.district}</p>
-              <p className="text-gray-600">{loc.division} Division</p>
-              <p className="font-semibold">{loc.count} report{loc.count !== 1 ? "s" : ""}</p>
-              <Link
-                href={`/crime-feed?division=${encodeURIComponent(loc.division)}&district=${encodeURIComponent(loc.district)}`}
-                className="text-blue-600 underline text-xs"
-              >
-                View reports
-              </Link>
-            </div>
-          </Popup>
-        </CircleMarker>
-      ))}
-    </MapContainer>
-    </div>
-  );
+    const map = L.map(containerRef.current).setView([23.685, 90.3563], 7);
+    mapRef.current = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    const maxCount = Math.max(...locations.map((l) => l.count), 1);
+
+    locations.forEach((loc) => {
+      const color = getColor(loc.count, maxCount);
+      const radius = getRadius(loc.count, maxCount);
+
+      L.circleMarker([loc.lat, loc.lng], {
+        radius,
+        color,
+        fillColor: color,
+        fillOpacity: 0.6,
+        weight: 2,
+      })
+        .bindPopup(
+          `<div style="font-size:0.875rem">` +
+            `<p style="font-weight:bold">${loc.district}</p>` +
+            `<p style="color:#4b5563">${loc.division} Division</p>` +
+            `<p style="font-weight:600">${loc.count} report${loc.count !== 1 ? "s" : ""}</p>` +
+            `<a href="/crime-feed?division=${encodeURIComponent(loc.division)}&district=${encodeURIComponent(loc.district)}" ` +
+            `style="color:#2563eb;text-decoration:underline;font-size:0.75rem">View reports</a>` +
+            `</div>`
+        )
+        .addTo(map);
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [locations]);
+
+  return <div ref={containerRef} style={{ height: "100%", width: "100%" }} />;
 }

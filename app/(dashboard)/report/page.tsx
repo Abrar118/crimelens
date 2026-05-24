@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Siren } from "lucide-react";
+import { Siren, Loader2 } from "lucide-react";
 import { getDivisionsWithDistricts } from "@/lib/get-division-info";
 import { generateImageDescription } from "@/lib/ai-generate";
 import { useState } from "react";
@@ -60,11 +60,15 @@ export default function ReportCrime() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      division: "",
+      district: "",
+      crimeTime: "",
     },
   });
 
   const [description, setDescription] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const { role } = useAuth();
 
   async function uploadFile(file: File): Promise<string> {
@@ -122,11 +126,18 @@ export default function ReportCrime() {
 
   const handleGenerateAIDescription = async () => {
     const file = form.getValues("image")[0];
+    setGeneratingAI(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const base64Data = (e.target?.result as string).split(",")[1];
-      const response = await generateImageDescription(base64Data, file.type);
-      setDescription(`<p>${response}</p>`);
+      try {
+        const base64Data = (e.target?.result as string).split(",")[1];
+        const response = await generateImageDescription(base64Data, file.type);
+        setDescription(`<p>${response}</p>`);
+      } catch {
+        toast.error("AI description unavailable. Please write a description manually.");
+      } finally {
+        setGeneratingAI(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -177,17 +188,14 @@ export default function ReportCrime() {
               />
             )}
 
-            {/* Description of the image when AI generate button is clicked */}
-            {description && (
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium mb-2 block">Description (AI-generated, editable)</label>
-                <TiptapEditor
-                  content={description}
-                  onChange={setDescription}
-                  placeholder="Crime description..."
-                />
-              </div>
-            )}
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium mb-2 block">Description</label>
+              <TiptapEditor
+                content={description}
+                onChange={setDescription}
+                placeholder="Describe the crime incident..."
+              />
+            </div>
 
             {/* if the video is availabe then show it in a tag */}
             <FormField
@@ -233,9 +241,17 @@ export default function ReportCrime() {
             type="button"
             variant="outline"
             onClick={handleGenerateAIDescription}
-            className="w-full md:w-auto"
+            disabled={generatingAI}
+            className="w-full md:w-auto cursor-pointer"
           >
-            Generate AI Description
+            {generatingAI ? (
+              <>
+                <Loader2 size={16} className="mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate AI Description"
+            )}
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

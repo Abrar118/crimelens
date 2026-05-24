@@ -24,7 +24,7 @@ Single command — no separate backend server needed. API routes run as serverle
 - **Auth:** Firebase Auth (email/password + phone OTP), session cookies via `middleware.ts`
 - **Database:** MongoDB Atlas (native driver, not Mongoose)
 - **Storage:** Firebase Storage (client-side direct uploads)
-- **AI:** Google Gemini 1.5 Flash for crime scene image descriptions
+- **AI:** Google Gemini 2.0 Flash for crime scene image descriptions
 - **State:** Zustand (`lib/store.ts`) — `useAuthStore` (Firebase user) and `useSidebarStore` (UI)
 - **UI:** shadcn/ui (New York style) + Radix UI + Tailwind CSS + Lucide icons
 - **Forms:** React Hook Form + Zod
