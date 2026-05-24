@@ -41,3 +41,6 @@ dist-ssr
 
 # backup
 src-backup
+
+# Firebase service account keys
+*-firebase-adminsdk-*.json
