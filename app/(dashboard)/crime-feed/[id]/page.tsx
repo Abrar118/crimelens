@@ -18,8 +18,12 @@ import {
   Loader2,
   Shield,
   Send,
+  ShieldCheck,
+  AlertTriangle as WarningIcon,
+  UserCheck,
 } from "lucide-react";
-import { getPost, votePost } from "@/lib/api/posts";
+import { getPost, votePost, claimPost } from "@/lib/api/posts";
+import { verifyPost } from "@/lib/api/admin";
 import { getComments, createComment } from "@/lib/api/comments";
 import { getUserProfile } from "@/lib/api/users";
 import { TiptapEditor } from "@/components/tiptap-editor";
@@ -44,7 +48,11 @@ interface PostData {
   verification_score: number;
   comment_count: number;
   is_anonymous: boolean;
+  is_verified_badge?: boolean;
   userVote: "up" | "down" | null;
+  ai_confidence?: number;
+  ai_flagged?: boolean;
+  ai_flag_reason?: string;
 }
 
 interface CommentData {
@@ -236,11 +244,30 @@ export default function PostDetailPage() {
           {/* Description */}
           <TiptapEditor content={post.description} editable={false} />
 
+          {post.ai_flagged && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3 flex items-start gap-2">
+              <WarningIcon size={18} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-yellow-400 text-sm font-medium">
+                  AI Flagged for Review (Confidence: {post.ai_confidence}%)
+                </p>
+                {post.ai_flag_reason && (
+                  <p className="text-yellow-400/70 text-xs mt-1">{post.ai_flag_reason}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Score + Votes */}
           <div className="flex items-center gap-4 pt-2">
             <Badge variant={score >= 0 ? "default" : "destructive"} className="text-sm">
               <Shield size={14} className="mr-1" /> Score: {score}
             </Badge>
+            {post.is_verified_badge && (
+              <Badge className="bg-green-500 text-white text-sm">
+                <ShieldCheck size={14} className="mr-1" /> Verified
+              </Badge>
+            )}
 
             {role && role !== "unverified" ? (
               <div className="flex gap-2">
@@ -268,6 +295,37 @@ export default function PostDetailPage() {
             <span className="flex items-center gap-1 text-sm text-gray-400">
               <MessageCircle size={14} /> {post.comment_count} comments
             </span>
+
+            {role === "admin" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const result = await verifyPost(postId);
+                  setPost((p) => p ? { ...p, is_verified_badge: result.is_verified_badge } : p);
+                  toast.success(result.is_verified_badge ? "Post verified" : "Verification removed");
+                }}
+                className="text-green-400 border-green-500"
+              >
+                <ShieldCheck size={14} className="mr-1" />
+                {post.is_verified_badge ? "Unverify" : "Verify"}
+              </Button>
+            )}
+
+            {post.is_anonymous && user?.uid === post.user_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await claimPost(postId);
+                  setPost((p) => p ? { ...p, is_anonymous: false } : p);
+                  toast.success("Post claimed successfully");
+                }}
+                className="text-purple-400 border-purple-500"
+              >
+                <UserCheck size={14} className="mr-1" /> Claim Post
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -289,6 +347,7 @@ export default function PostDetailPage() {
                 storagePath={`comments/${postId}`}
                 onUploadComplete={setProofUrl}
                 accept="image/*,video/*"
+                watermark
               />
               <Button
                 onClick={handleSubmitComment}

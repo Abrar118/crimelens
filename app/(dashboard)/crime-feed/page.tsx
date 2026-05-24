@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Loader2,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { getPosts } from "@/lib/api/posts";
 import { getDivisionsWithDistricts } from "@/lib/get-division-info";
@@ -40,6 +41,7 @@ interface PostItem {
   upvotes: number;
   downvotes: number;
   comment_count: number;
+  is_verified_badge: boolean;
 }
 
 const divisionsData = getDivisionsWithDistricts();
@@ -190,7 +192,14 @@ export default function CrimeFeedPage() {
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                    <div className="space-y-1">
+                      <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                      {post.is_verified_badge && (
+                        <Badge className="bg-green-500 text-white text-xs">
+                          <ShieldCheck size={10} className="mr-1" /> Verified
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex gap-1">
                       <Badge variant="outline" className="text-xs">{post.division}</Badge>
                       <Badge variant="outline" className="text-xs">{post.district}</Badge>

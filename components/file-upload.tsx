@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import imageCompression from "browser-image-compression";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface FileUploadProps {
   onUploadComplete: (url: string) => void;
   accept?: string;
   maxSizeMB?: number;
+  watermark?: boolean;
 }
 
 export function FileUpload({
@@ -19,6 +21,7 @@ export function FileUpload({
   onUploadComplete,
   accept = "image/*,video/*",
   maxSizeMB = 10,
+  watermark = false,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -26,6 +29,30 @@ export function FileUpload({
   const [fileName, setFileName] = useState<string | null>(null);
   const [isVideo, setIsVideo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const addWatermark = async (file: File): Promise<File> => {
+    const img = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(-Math.PI / 4);
+    ctx.font = `${Math.max(canvas.width, canvas.height) / 20}px sans-serif`;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+    ctx.textAlign = "center";
+    ctx.fillText("CrimeLens", 0, 0);
+    ctx.restore();
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(new File([blob!], file.name, { type: file.type }));
+      }, file.type);
+    });
+  };
 
   const handleFile = async (file: File) => {
     if (file.size > maxSizeMB * 1024 * 1024) {
@@ -42,10 +69,22 @@ export function FileUpload({
       setPreviewUrl(null);
     }
 
+    let processedFile: File = file;
+    if (file.type.startsWith("image/")) {
+      processedFile = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      });
+      if (watermark) {
+        processedFile = await addWatermark(processedFile);
+      }
+    }
+
     setUploading(true);
     const timestamp = Date.now();
     const storageRef = ref(storage, `${storagePath}/${timestamp}-${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const uploadTask = uploadBytesResumable(storageRef, processedFile);
 
     uploadTask.on(
       "state_changed",

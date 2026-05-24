@@ -1,206 +1,95 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Bell,
-  ThumbsUp,
   MessageCircle,
+  ThumbsUp,
   ShieldAlert,
-  Trash2,
-  CheckCircle,
+  CheckCheck,
+  ExternalLink,
 } from "lucide-react";
-import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
+import { useNotifications, type Notification } from "@/hooks/use-notifications";
+import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
-const dummyNotifications = [
-  {
-    id: "1",
-    type: "upvote",
-    message: "Your crime report received an upvote!",
-    user: "John Doe",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    timestamp: "5 minutes ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    type: "comment",
-    message: "New comment: 'This is concerning!'",
-    user: "Sarah Smith",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    timestamp: "15 minutes ago",
-    unread: true,
-  },
-  {
-    id: "3",
-    type: "admin",
-    message: "Admin has verified your crime report.",
-    user: "Admin",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    timestamp: "1 hour ago",
-    unread: false,
-  },
-  {
-    id: "4",
-    type: "comment",
-    message: "User 'Mike' replied: 'Stay safe!'",
-    user: "Mike Johnson",
-    avatar: "https://i.pravatar.cc/150?img=4",
-    timestamp: "2 hours ago",
-    unread: false,
-  },
-];
+const TYPE_ICONS: Record<string, typeof Bell> = {
+  comment: MessageCircle,
+  vote: ThumbsUp,
+  admin_ban: ShieldAlert,
+  admin_delete: ShieldAlert,
+};
 
-const Notification: React.FC = () => {
-  const [notifications, setNotifications] = useState(dummyNotifications);
-  const { toast } = useToast();
+const TYPE_COLORS: Record<string, string> = {
+  comment: "text-blue-400",
+  vote: "text-green-400",
+  admin_ban: "text-red-400",
+  admin_delete: "text-red-400",
+};
 
-  // Mark all as read with confirmation toast
-  const markAllAsRead = () => {
-    toast({
-      title: "Marking All as Read",
-      description: "All notifications will be marked as read.",
-      action: (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            setNotifications(
-              notifications.map((n) => ({ ...n, unread: false }))
-            );
-            toast({
-              title: "Success",
-              description: "All notifications marked as read.",
-            });
-          }}
-        >
-          Confirm
-        </Button>
-      ),
-    });
-  };
-
-  // Clear all notifications with confirmation toast
-  const clearAllNotifications = () => {
-    toast({
-      title: "Clear All Notifications?",
-      description: "This action cannot be undone.",
-      action: (
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => {
-            setNotifications([]);
-            toast({
-              title: "Deleted",
-              description: "All notifications cleared.",
-            });
-          }}
-        >
-          Confirm
-        </Button>
-      ),
-    });
-  };
+export default function NotificationsPage() {
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white p-6">
-      <Toaster />
-      <div className="max-w-4xl mx-auto">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-yellow-400 flex items-center">
-            <Bell className="mr-2" size={24} /> Notifications
+    <div className="min-h-screen text-white p-4 md:p-6">
+      <div className="max-w-3xl mx-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Bell size={24} /> Notifications
+            {unreadCount > 0 && (
+              <Badge className="bg-red-500 text-white">{unreadCount}</Badge>
+            )}
           </h1>
-
-          {/* Buttons */}
-          <div className="flex gap-3 mt-3 md:mt-0">
-            <Button
-              variant="outline"
-              className="text-yellow-400 border-yellow-500 hover:bg-yellow-500 hover:text-black"
-              onClick={markAllAsRead}
-            >
-              <CheckCircle className="mr-2" size={16} /> Mark All as Read
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={markAllAsRead}>
+              <CheckCheck size={16} className="mr-2" /> Mark all read
             </Button>
-            <Button
-              variant="outline"
-              className="text-red-400 border-red-500 hover:bg-red-500 hover:text-black"
-              onClick={clearAllNotifications}
-            >
-              <Trash2 className="mr-2" size={16} /> Clear All
-            </Button>
-          </div>
+          )}
         </div>
 
-        {/* Notifications List */}
-        <div className="space-y-4">
-          {notifications.length > 0 ? (
-            notifications.map((notification) => (
+        {notifications.length === 0 ? (
+          <p className="text-center text-gray-400 py-16">No notifications yet</p>
+        ) : (
+          notifications.map((notif) => {
+            const Icon = TYPE_ICONS[notif.type] || Bell;
+            const color = TYPE_COLORS[notif.type] || "text-gray-400";
+
+            return (
               <Card
-                key={notification.id}
-                className="bg-gray-900 border border-gray-700"
+                key={notif.id}
+                className={`border cursor-pointer transition-colors ${
+                  notif.read
+                    ? "bg-gray-900/30 border-gray-800"
+                    : "bg-gray-900 border-gray-600"
+                }`}
+                onClick={() => markAsRead(notif.id)}
               >
-                <CardHeader className="flex flex-row justify-between items-center">
-                  <div className="flex items-center space-x-4">
-                    {/* User Avatar */}
-                    <Avatar>
-                      <AvatarImage
-                        src={notification.avatar}
-                        alt={notification.user}
-                      />
-                      <AvatarFallback>
-                        {notification.user.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div>
-                      <CardTitle className="text-white">
-                        <span className="font-semibold">
-                          {notification.user}
-                        </span>{" "}
-                        {notification.message}
-                      </CardTitle>
-                      <p className="text-gray-400 text-sm">
-                        {notification.timestamp}
-                      </p>
-                    </div>
+                <CardContent className="flex items-center gap-4 p-4">
+                  <Icon size={20} className={color} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm ${notif.read ? "text-gray-400" : "text-white"}`}>
+                      {notif.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
+                    </p>
                   </div>
-
-                  {/* Notification Type Icon */}
-                  {notification.type === "upvote" && (
-                    <Badge className="bg-green-500 text-white">
-                      <ThumbsUp className="mr-1" size={16} /> Upvote
-                    </Badge>
+                  {notif.post_id && (
+                    <Link href={`/crime-feed/${notif.post_id}`} onClick={(e) => e.stopPropagation()}>
+                      <ExternalLink size={16} className="text-gray-400 hover:text-white" />
+                    </Link>
                   )}
-                  {notification.type === "comment" && (
-                    <Badge className="bg-blue-400 text-white">
-                      <MessageCircle className="mr-1" size={16} /> Comment
-                    </Badge>
-                  )}
-                  {notification.type === "admin" && (
-                    <Badge className="bg-red-500 text-white">
-                      <ShieldAlert className="mr-1" size={16} /> Admin Action
-                    </Badge>
-                  )}
-                </CardHeader>
-                <CardContent className="text-gray-400 text-sm">
-                  {notification.unread && (
-                    <span className="text-yellow-400">New</span>
+                  {!notif.read && (
+                    <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
                   )}
                 </CardContent>
               </Card>
-            ))
-          ) : (
-            <p className="text-center text-gray-400">No new notifications.</p>
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
-};
-
-export default Notification;
+}

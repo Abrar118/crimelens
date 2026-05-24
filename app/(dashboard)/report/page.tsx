@@ -63,10 +63,11 @@ export default function ReportCrime() {
   });
 
   const [description, setDescription] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const { role } = useAuth();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await apiClient.post("/posts", { ...values, description });
+    await apiClient.post("/posts", { ...values, description, is_anonymous: isAnonymous });
     toast.success("Report submitted successfully.");
     form.reset();
   }
@@ -263,6 +264,19 @@ export default function ReportCrime() {
               </FormItem>
             )}
           />
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="anonymous"
+              checked={isAnonymous}
+              onChange={(e) => setIsAnonymous(e.target.checked)}
+              className="rounded"
+            />
+            <label htmlFor="anonymous" className="text-sm text-muted-foreground">
+              Post anonymously (your identity will be hidden)
+            </label>
+          </div>
 
           <Button type="submit" className="w-full">
             Submit Report

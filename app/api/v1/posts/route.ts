@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -65,6 +66,37 @@ export async function POST(request: Request) {
     };
 
     const result = await db.collection("posts").insertOne(post);
+
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const analysisPrompt = `Analyze this crime report for credibility. Consider the description and context.
+Title: ${post.title}
+Description: ${post.description}
+Location: ${post.division}, ${post.district}
+
+Respond with ONLY a JSON object: { "confidence": <number 0-100>, "flagged": <boolean>, "reason": "<brief explanation>" }`;
+
+      const aiResult = await model.generateContent(analysisPrompt);
+      const text = aiResult.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        await db.collection("posts").updateOne(
+          { _id: result.insertedId },
+          {
+            $set: {
+              ai_confidence: analysis.confidence,
+              ai_flagged: analysis.flagged,
+              ai_flag_reason: analysis.reason,
+            },
+          }
+        );
+      }
+    } catch {
+      // AI analysis is non-blocking
+    }
+
     return NextResponse.json({ _id: result.insertedId, ...post }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error";

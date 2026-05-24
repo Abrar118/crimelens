@@ -12,15 +12,25 @@ import {
 } from "@/components/ui/sidebar";
 import { navMain } from "@/lib/data/sidebar";
 import { useAuthStore } from "@/lib/store";
+import { useNotifications } from "@/hooks/use-notifications";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthStore((state) => state.user);
+  const { unreadCount } = useNotifications();
 
   const userData = {
     name: user?.displayName ?? user?.email?.split("@")[0] ?? "User",
     email: user?.email ?? "",
     avatar: user?.photoURL ?? "/images/avatar.jpg",
   };
+
+  const navWithBadge = navMain.map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({
+      ...item,
+      badge: item.url === "/notifications" && unreadCount > 0 ? unreadCount : undefined,
+    })),
+  }));
 
   return (
     <Sidebar collapsible="icon" {...props} variant="floating" side="left">
@@ -30,7 +40,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={navWithBadge} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={userData} />

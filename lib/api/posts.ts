@@ -51,3 +51,8 @@ export async function getLeaderboard() {
   const { data } = await apiClient.get("/leaderboard");
   return data;
 }
+
+export async function claimPost(postId: string) {
+  const { data } = await apiClient.post(`/posts/${postId}/claim`);
+  return data;
+}

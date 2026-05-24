@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(
   request: Request,
@@ -56,6 +57,23 @@ export async function POST(
       { _id: new ObjectId(id) },
       { $inc: { [field]: 1 } }
     );
+
+    const post = await db.collection("posts").findOne({ _id: new ObjectId(id) });
+    if (post && post.user_id !== decoded.uid) {
+      await createNotification(post.user_id, {
+        type: "vote",
+        post_id: id,
+        actor_id: decoded.uid,
+        message: `Someone ${type}voted your post`,
+      }).catch(() => {});
+    }
+
+    if (post && post.upvotes >= 10 && post.comment_count >= 3) {
+      await db.collection("posts").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { is_verified_badge: true } }
+      );
+    }
 
     return NextResponse.json({ status: "voted" }, { status: 201 });
   } catch (error) {

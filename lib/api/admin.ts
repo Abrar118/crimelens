@@ -29,3 +29,13 @@ export async function adminDeleteComment(commentId: string) {
   const { data } = await apiClient.delete(`/admin/comments/${commentId}`);
   return data;
 }
+
+export async function verifyPost(postId: string) {
+  const { data } = await apiClient.post(`/admin/posts/${postId}/verify`);
+  return data;
+}
+
+export async function getFlaggedPosts() {
+  const { data } = await apiClient.get("/admin/posts/flagged");
+  return data;
+}
