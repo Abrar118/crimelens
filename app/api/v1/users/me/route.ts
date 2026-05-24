@@ -49,7 +49,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ status: "success" }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("POST /users/me error:", error);
+    const message = error instanceof Error ? error.message : "Unauthorized";
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 }
 

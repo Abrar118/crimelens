@@ -45,11 +45,16 @@ export default function SignupPage() {
       );
 
       const idToken = await userCredential.user.getIdToken();
-      await fetch("/api/v1/auth/session", {
+      const sessionRes = await fetch("/api/v1/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
+
+      if (!sessionRes.ok) {
+        const err = await sessionRes.json().catch(() => ({}));
+        console.error("Session creation failed:", err);
+      }
 
       await apiClient.post("/users/me", {
         name: formData.name,
@@ -60,8 +65,13 @@ export default function SignupPage() {
       toast.success("Account created successfully!");
       router.push("/dashboard");
     } catch (error: unknown) {
+      console.error("Signup error:", error);
       const message = error instanceof Error ? error.message : "Signup failed";
-      toast.error(message);
+      if ((error as any)?.response?.data?.error) {
+        toast.error((error as any).response.data.error);
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

@@ -38,11 +38,20 @@ export default function LoginPage() {
       );
       setUser(userCredential.user);
       const idToken = await userCredential.user.getIdToken();
-      await fetch("/api/v1/auth/session", {
+      const sessionRes = await fetch("/api/v1/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
+
+      if (!sessionRes.ok) {
+        const err = await sessionRes.json().catch(() => ({}));
+        console.error("Session creation failed:", err);
+        toast.error(err.error || "Session creation failed");
+        setLoading(false);
+        return;
+      }
+
       toast.success("Login Successful");
       router.push("/dashboard");
     } catch (error: unknown) {
