@@ -48,15 +48,15 @@ const dummyLogs = [
 const getStatusColor = (status: string) => {
   switch (status) {
     case "Critical":
-      return "text-red-500 font-bold";
+      return "text-destructive font-bold";
     case "Warning":
-      return "text-yellow-400 font-bold";
+      return "text-yellow-500 font-bold";
     case "Info":
-      return "text-blue-400 font-bold";
+      return "text-primary font-bold";
     case "Safe":
-      return "text-green-400 font-bold";
+      return "text-green-500 font-bold";
     default:
-      return "text-gray-400";
+      return "text-muted-foreground";
   }
 };
 
@@ -82,48 +82,48 @@ const Security: React.FC = () => {
 
   return (
     <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold mb-6 flex items-center">
-        <ShieldAlert className="mr-3 text-red-500" /> Security Logs
+      <h1 className="text-2xl font-bold mb-6 flex items-center">
+        <ShieldAlert className="mr-3 text-destructive" /> Security Logs
       </h1>
 
       {/* Search Bar */}
       <div className="mb-4 flex items-center gap-3">
-        <Search size={20} className="text-gray-400" />
+        <Search size={20} className="text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search security events..."
-          className="bg-gray-800 text-white border-gray-600"
+          className="bg-muted text-foreground border-border"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       {/* Security Logs Table */}
-      <Card className="overflow-hidden border border-gray-700">
+      <Card className="overflow-hidden border border-border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-800">
-              <TableHead className="text-white">Event</TableHead>
-              <TableHead className="text-white">Status</TableHead>
-              <TableHead className="text-white">Time</TableHead>
-              <TableHead className="text-white">Actions</TableHead>
+            <TableRow className="bg-muted">
+              <TableHead className="text-foreground">Event</TableHead>
+              <TableHead className="text-foreground">Status</TableHead>
+              <TableHead className="text-foreground">Time</TableHead>
+              <TableHead className="text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {logs.length > 0 ? (
               logs.map((log) => (
-                <TableRow key={log.id} className="hover:bg-gray-800">
+                <TableRow key={log.id} className="hover:bg-muted/50">
                   <TableCell>{log.event}</TableCell>
                   <TableCell className={getStatusColor(log.status)}>
                     {log.status}
                   </TableCell>
-                  <TableCell className="text-gray-400">{log.time}</TableCell>
+                  <TableCell className="text-muted-foreground">{log.time}</TableCell>
                   <TableCell className="flex gap-3">
                     {/* View Log Details */}
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-blue-400 text-blue-400"
+                      className="border-primary text-primary cursor-pointer"
                     >
                       <Eye className="mr-2" size={16} />
                       View
@@ -133,7 +133,7 @@ const Security: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-red-400 text-red-400"
+                      className="border-destructive text-destructive cursor-pointer"
                       onClick={() => deleteLog(log.id)}
                     >
                       <Trash2 className="mr-2" size={16} />
@@ -144,7 +144,7 @@ const Security: React.FC = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-gray-400">
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No security logs found.
                 </TableCell>
               </TableRow>

@@ -58,20 +58,20 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-6">
+    <div className="min-h-screen text-foreground p-4 md:p-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        <Card className="border border-gray-700">
+        <Card className="border border-border">
           <CardHeader>
             <CardTitle className="text-primary text-xl md:text-2xl flex items-center">
               <Trophy className="mr-2 text-yellow-400" size={28} /> Top Contributors
             </CardTitle>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Score = Reports x 10 + Comments x 5
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
             {entries.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">No contributors yet</p>
+              <p className="text-center text-muted-foreground py-8">No contributors yet</p>
             ) : (
               entries.map((entry, index) => {
                 const rank = index + 1;
@@ -86,7 +86,7 @@ export default function LeaderboardPage() {
                         ? "bg-blue-500/10 border-blue-500/30"
                         : rankStyle
                         ? rankStyle.bg
-                        : "bg-gray-900/50 border-gray-700"
+                        : "bg-card/50 border-border"
                     }`}
                   >
                     {/* Rank */}
@@ -94,7 +94,7 @@ export default function LeaderboardPage() {
                       {rankStyle ? (
                         <rankStyle.icon size={24} className={rankStyle.color} />
                       ) : (
-                        <span className="text-lg font-bold text-gray-400">#{rank}</span>
+                        <span className="text-lg font-bold text-muted-foreground">#{rank}</span>
                       )}
                     </div>
 
@@ -110,7 +110,7 @@ export default function LeaderboardPage() {
                           <span className="text-blue-400 text-xs ml-2">(You)</span>
                         )}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1">
                           <FileText size={12} /> {entry.post_count} reports
                         </span>
@@ -124,7 +124,7 @@ export default function LeaderboardPage() {
                     <Badge
                       variant="outline"
                       className={`text-sm font-bold flex-shrink-0 ${
-                        rankStyle ? rankStyle.color : "text-gray-300"
+                        rankStyle ? rankStyle.color : "text-muted-foreground"
                       }`}
                     >
                       {entry.score} pts

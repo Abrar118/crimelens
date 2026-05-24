@@ -64,12 +64,12 @@ export default function MyReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-yellow-400">My Crime Reports</h1>
+          <h1 className="text-2xl font-bold text-foreground">My Crime Reports</h1>
           <Link href="/report">
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus size={16} className="mr-2" /> New Report
             </Button>
           </Link>
@@ -77,7 +77,7 @@ export default function MyReportsPage() {
 
         {posts.length === 0 ? (
           <div className="text-center py-16 space-y-4">
-            <p className="text-gray-400">You haven&apos;t reported any crimes yet.</p>
+            <p className="text-muted-foreground">You haven&apos;t reported any crimes yet.</p>
             <Link href="/report">
               <Button variant="outline">Report a Crime</Button>
             </Link>
@@ -87,24 +87,24 @@ export default function MyReportsPage() {
             {posts.map((post) => (
               <Card
                 key={post._id}
-                className="bg-gray-900 border border-gray-700 cursor-pointer hover:border-gray-500 transition-colors"
+                className="bg-card border border-border cursor-pointer hover:border-muted-foreground/50 transition-colors"
                 onClick={() => router.push(`/crime-feed/${post._id}`)}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                  <CardTitle className="text-foreground text-lg">{post.title}</CardTitle>
                   <div className="flex gap-1">
                     <Badge variant="outline" className="text-xs">{post.division}</Badge>
                     <Badge variant="outline" className="text-xs">{post.district}</Badge>
                   </div>
-                  <p className="text-gray-400 text-xs">
-                    {formatDistanceToNow(new Date(post.post_time), { addSuffix: true })}
+                  <p className="text-muted-foreground text-xs">
+                    {(() => { const d = new Date(post.post_time); return isNaN(d.getTime()) ? "Unknown" : formatDistanceToNow(d, { addSuffix: true }); })()}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 text-sm line-clamp-2">
+                  <p className="text-muted-foreground text-sm line-clamp-2">
                     {stripHtml(post.description).slice(0, 100)}
                   </p>
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
+                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <ThumbsUp size={14} /> {post.upvotes}
                     </span>

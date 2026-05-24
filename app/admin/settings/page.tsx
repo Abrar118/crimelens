@@ -44,39 +44,39 @@ const Settings: React.FC = () => {
 
   return (
     <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
       {/* Theme Settings */}
-      <Card className="p-6 mb-6 border border-gray-700">
+      <Card className="p-6 mb-6 border border-border">
         <h2 className="text-xl font-bold flex items-center mb-3">
-          <Sun className="mr-2 text-yellow-400" />
+          <Sun className="mr-2 text-yellow-500" />
           Appearance
         </h2>
         <div className="flex justify-between items-center">
-          <p className="text-gray-400">Enable Dark Mode</p>
+          <p className="text-muted-foreground">Enable Dark Mode</p>
           <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
         </div>
       </Card>
 
       {/* Security Settings */}
-      <Card className="p-6 mb-6 border border-gray-700">
+      <Card className="p-6 mb-6 border border-border">
         <h2 className="text-xl font-bold flex items-center mb-3">
-          <ShieldCheck className="mr-2 text-blue-400" />
+          <ShieldCheck className="mr-2 text-primary" />
           Security
         </h2>
 
         {/* Change Password */}
         <div className="mb-4">
-          <label className="text-gray-400">Change Password</label>
+          <label className="text-muted-foreground">Change Password</label>
           <div className="flex gap-3">
             <Input
               type="password"
               placeholder="New Password"
-              className="bg-gray-800 text-white border-gray-600"
+              className="bg-muted text-foreground border-border"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button onClick={handleChangePassword} className="bg-blue-600">
+            <Button onClick={handleChangePassword} className="bg-primary text-primary-foreground cursor-pointer">
               <Lock className="mr-2" size={16} />
               Change
             </Button>
@@ -85,7 +85,7 @@ const Settings: React.FC = () => {
 
         {/* Enable 2FA */}
         <div className="flex justify-between items-center mb-4">
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Enable Two-Factor Authentication (2FA)
           </p>
           <Switch checked={twoFA} onCheckedChange={toggleTwoFA} />
@@ -94,7 +94,7 @@ const Settings: React.FC = () => {
         {/* Delete Account */}
         <Button
           variant="destructive"
-          className="w-full"
+          className="w-full cursor-pointer"
           onClick={handleDeleteAccount}
         >
           <Trash2 className="mr-2" size={16} />
@@ -103,13 +103,13 @@ const Settings: React.FC = () => {
       </Card>
 
       {/* Logout Button */}
-      <Card className="p-6 border border-gray-700">
+      <Card className="p-6 border border-border">
         <h2 className="text-xl font-bold flex items-center mb-3">
-          <LogOut className="mr-2 text-red-400" />
+          <LogOut className="mr-2 text-destructive" />
           Logout
         </h2>
-        <p className="text-gray-400 mb-4">Log out of your account securely.</p>
-        <Button className="bg-red-600 w-full">Logout</Button>
+        <p className="text-muted-foreground mb-4">Log out of your account securely.</p>
+        <Button className="bg-destructive text-destructive-foreground w-full cursor-pointer">Logout</Button>
       </Card>
     </div>
   );

@@ -43,13 +43,13 @@ function ContactCard({ contact }: { contact: EmergencyContact }) {
   const Icon = config.icon;
 
   return (
-    <Card className="bg-gray-900 border border-gray-700">
+    <Card className="bg-card border border-border">
       <CardContent className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
           <Icon size={20} className={config.color} />
           <div>
-            <p className="font-medium text-white text-sm">{contact.name}</p>
-            <p className="text-gray-400 text-xs">{contact.number}</p>
+            <p className="font-medium text-foreground text-sm">{contact.name}</p>
+            <p className="text-muted-foreground text-xs">{contact.number}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -109,7 +109,7 @@ export default function EmergencyPage() {
   }
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-6">
+    <div className="min-h-screen text-foreground p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-2">
@@ -141,9 +141,9 @@ export default function EmergencyPage() {
 
         {/* Division Selector */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">Select Division:</span>
+          <span className="text-sm text-muted-foreground">Select Division:</span>
           <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-            <SelectTrigger className="w-48 bg-gray-900 text-white border-gray-700">
+            <SelectTrigger className="w-48 bg-card text-foreground border-border">
               <SelectValue placeholder="Choose division" />
             </SelectTrigger>
             <SelectContent>
@@ -157,14 +157,14 @@ export default function EmergencyPage() {
         {/* Division-specific Contacts */}
         {selectedDivision && divisionData && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               {selectedDivision} Division
             </h2>
             {Object.entries(groupedContacts).map(([type, contacts]) => {
               const config = TYPE_CONFIG[type];
               return (
                 <div key={type}>
-                  <h3 className={`text-sm font-medium mb-2 ${config?.color || "text-gray-400"}`}>
+                  <h3 className={`text-sm font-medium mb-2 ${config?.color || "text-muted-foreground"}`}>
                     {config?.label || type}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

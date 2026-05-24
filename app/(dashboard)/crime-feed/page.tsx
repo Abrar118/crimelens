@@ -117,9 +117,9 @@ export default function CrimeFeedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-white p-4 md:p-6">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-6">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold text-yellow-400 flex items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center mb-6">
           <MapPin className="mr-2" size={28} /> Crime Reports Feed
         </h1>
 
@@ -130,13 +130,13 @@ export default function CrimeFeedPage() {
             <Input
               type="text"
               placeholder="Search reports..."
-              className="pl-10 bg-gray-900 text-white border-gray-700"
+              className="pl-10 bg-card text-foreground border-border"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={division} onValueChange={setDivision}>
-            <SelectTrigger className="bg-gray-900 text-white border-gray-700">
+            <SelectTrigger className="bg-card text-foreground border-border">
               <SelectValue placeholder="Division" />
             </SelectTrigger>
             <SelectContent>
@@ -146,7 +146,7 @@ export default function CrimeFeedPage() {
             </SelectContent>
           </Select>
           <Select value={district} onValueChange={setDistrict} disabled={!division}>
-            <SelectTrigger className="bg-gray-900 text-white border-gray-700">
+            <SelectTrigger className="bg-card text-foreground border-border">
               <SelectValue placeholder="District" />
             </SelectTrigger>
             <SelectContent>
@@ -159,7 +159,7 @@ export default function CrimeFeedPage() {
 
         <div className="flex items-center gap-3 mb-6">
           <Select value={String(sortIndex)} onValueChange={(v) => setSortIndex(Number(v))}>
-            <SelectTrigger className="w-48 bg-gray-900 text-white border-gray-700">
+            <SelectTrigger className="w-48 bg-card text-foreground border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -187,13 +187,13 @@ export default function CrimeFeedPage() {
             {posts.map((post) => (
               <Card
                 key={post._id}
-                className="bg-gray-900 border border-gray-700 cursor-pointer hover:border-gray-500 transition-colors"
+                className="bg-card border border-border cursor-pointer hover:border-muted-foreground/50 transition-colors"
                 onClick={() => router.push(`/crime-feed/${post._id}`)}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                      <CardTitle className="text-foreground text-lg">{post.title}</CardTitle>
                       {post.is_verified_badge && (
                         <Badge className="bg-green-500 text-white text-xs">
                           <ShieldCheck size={10} className="mr-1" /> Verified
@@ -205,8 +205,8 @@ export default function CrimeFeedPage() {
                       <Badge variant="outline" className="text-xs">{post.district}</Badge>
                     </div>
                   </div>
-                  <p className="text-gray-400 text-xs">
-                    {formatDistanceToNow(new Date(post.post_time), { addSuffix: true })}
+                  <p className="text-muted-foreground text-xs">
+                    {(() => { const d = new Date(post.post_time); return isNaN(d.getTime()) ? "Unknown" : formatDistanceToNow(d, { addSuffix: true }); })()}
                   </p>
                 </CardHeader>
                 <CardContent>

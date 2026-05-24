@@ -178,7 +178,7 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="text-center py-16 text-gray-400">Post not found</div>
+      <div className="text-center py-16 text-muted-foreground">Post not found</div>
     );
   }
 
@@ -186,17 +186,17 @@ export default function PostDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-      <Button variant="ghost" onClick={() => router.back()} className="text-gray-400">
+      <Button variant="ghost" onClick={() => router.back()} className="text-muted-foreground">
         <ArrowLeft size={18} className="mr-2" /> Back to Feed
       </Button>
 
       {/* Post Header */}
-      <Card className="bg-gray-900 border-gray-700">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <CardTitle className="text-2xl text-white">{post.title}</CardTitle>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
+              <CardTitle className="text-2xl text-foreground">{post.title}</CardTitle>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 {author && !post.is_anonymous && (
                   <div className="flex items-center gap-2">
                     <Avatar className="w-6 h-6">
@@ -209,7 +209,7 @@ export default function PostDetailPage() {
                 {post.is_anonymous && <span className="italic">Anonymous</span>}
                 <span className="flex items-center gap-1">
                   <Clock size={14} />
-                  {formatDistanceToNow(new Date(post.post_time), { addSuffix: true })}
+                  {(() => { const d = new Date(post.post_time); return isNaN(d.getTime()) ? "Unknown" : formatDistanceToNow(d, { addSuffix: true }); })()}
                 </span>
               </div>
             </div>
@@ -218,9 +218,9 @@ export default function PostDetailPage() {
               <Badge variant="outline">{post.district}</Badge>
             </div>
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
             <Calendar size={12} />
-            Crime occurred: {format(new Date(post.crime_time), "PPpp")}
+            Crime occurred: {(() => { const d = new Date(post.crime_time); return isNaN(d.getTime()) ? "Unknown" : format(d, "PPpp"); })()}
           </div>
         </CardHeader>
 
@@ -292,7 +292,7 @@ export default function PostDetailPage() {
               <p className="text-xs text-gray-500">Verify your account to vote</p>
             )}
 
-            <span className="flex items-center gap-1 text-sm text-gray-400">
+            <span className="flex items-center gap-1 text-sm text-muted-foreground">
               <MessageCircle size={14} /> {post.comment_count} comments
             </span>
 
@@ -332,11 +332,11 @@ export default function PostDetailPage() {
 
       {/* Comments */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Comments</h2>
+        <h2 className="text-xl font-semibold text-foreground">Comments</h2>
 
         {/* Add Comment */}
         {role && role !== "unverified" ? (
-          <Card className="bg-gray-900 border-gray-700">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6 space-y-3">
               <TiptapEditor
                 content={commentText}
@@ -367,14 +367,14 @@ export default function PostDetailPage() {
           <p className="text-gray-500 text-sm">Verify your account to comment</p>
         )}
 
-        <Separator className="bg-gray-700" />
+        <Separator className="bg-border" />
 
         {/* Comment List */}
         {comments.length === 0 ? (
           <p className="text-gray-400 text-center py-8">No comments yet</p>
         ) : (
           comments.map((comment) => (
-            <Card key={comment._id} className="bg-gray-900/50 border-gray-700">
+            <Card key={comment._id} className="bg-card/50 border-border">
               <CardContent className="pt-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">

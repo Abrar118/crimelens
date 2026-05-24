@@ -38,15 +38,15 @@ const dummyAlerts = [
 const getBadgeColor = (category: string) => {
   switch (category) {
     case "Critical":
-      return "text-red-500 font-bold";
+      return "text-destructive font-bold";
     case "Warning":
-      return "text-yellow-400 font-bold";
+      return "text-yellow-500 font-bold";
     case "Info":
-      return "text-blue-400 font-bold";
+      return "text-primary font-bold";
     case "Resolved":
-      return "text-green-400 font-bold";
+      return "text-green-500 font-bold";
     default:
-      return "text-gray-400";
+      return "text-muted-foreground";
   }
 };
 
@@ -80,44 +80,44 @@ const Alert: React.FC = () => {
 
   return (
     <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold mb-6 flex items-center">
-        <Bell className="mr-3 text-yellow-400" /> Admin Alerts
+      <h1 className="text-2xl font-bold mb-6 flex items-center">
+        <Bell className="mr-3 text-yellow-500" /> Admin Alerts
       </h1>
 
       {/* Search Bar */}
       <div className="mb-4 flex items-center gap-3">
-        <Search size={20} className="text-gray-400" />
+        <Search size={20} className="text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search alerts..."
-          className="bg-gray-800 text-white border-gray-600"
+          className="bg-muted text-foreground border-border"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       {/* Alerts Table */}
-      <Card className="overflow-hidden border border-gray-700">
+      <Card className="overflow-hidden border border-border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-800">
-              <TableHead className="text-white">Title</TableHead>
-              <TableHead className="text-white">Category</TableHead>
-              <TableHead className="text-white">Status</TableHead>
-              <TableHead className="text-white">Actions</TableHead>
+            <TableRow className="bg-muted">
+              <TableHead className="text-foreground">Title</TableHead>
+              <TableHead className="text-foreground">Category</TableHead>
+              <TableHead className="text-foreground">Status</TableHead>
+              <TableHead className="text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {alerts.length > 0 ? (
               alerts.map((alert) => (
-                <TableRow key={alert.id} className="hover:bg-gray-800">
+                <TableRow key={alert.id} className="hover:bg-muted/50">
                   <TableCell>{alert.title}</TableCell>
                   <TableCell className={getBadgeColor(alert.category)}>
                     {alert.category}
                   </TableCell>
                   <TableCell
                     className={`font-bold ${
-                      alert.read ? "text-green-400" : "text-red-400"
+                      alert.read ? "text-green-500" : "text-destructive"
                     }`}
                   >
                     {alert.read ? "Read" : "Unread"}
@@ -128,7 +128,7 @@ const Alert: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-green-400 text-green-400"
+                        className="border-green-500 text-green-500 cursor-pointer"
                         onClick={() => markAsRead(alert.id)}
                       >
                         <CheckCircle className="mr-2" size={16} />
@@ -140,7 +140,7 @@ const Alert: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-red-400 text-red-400"
+                      className="border-destructive text-destructive cursor-pointer"
                       onClick={() => deleteAlert(alert.id)}
                     >
                       <Trash2 className="mr-2" size={16} />
@@ -151,7 +151,7 @@ const Alert: React.FC = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-gray-400">
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No alerts found.
                 </TableCell>
               </TableRow>

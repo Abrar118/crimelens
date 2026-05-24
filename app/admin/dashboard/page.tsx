@@ -32,31 +32,37 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex flex-col p-6 min-h-screen text-primary">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="flex flex-col p-6 min-h-screen">
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="p-6 bg-gray-300 rounded-lg flex items-center">
-          <Users className="mr-4 text-blue-400" size={32} />
+        <Card className="p-6 bg-card border flex items-center">
+          <div className="p-2 rounded-lg bg-primary/10 mr-4">
+            <Users className="text-primary" size={32} />
+          </div>
           <div>
-            <h2 className="text-lg font-bold">Total Users</h2>
-            <p className="text-gray-900">{stats.totalUsers.toLocaleString()}</p>
+            <h2 className="text-lg font-bold text-card-foreground">Total Users</h2>
+            <p className="text-muted-foreground">{stats.totalUsers.toLocaleString()}</p>
           </div>
         </Card>
 
-        <Card className="p-6 bg-gray-300 rounded-lg flex items-center">
-          <ShieldAlert className="mr-4 text-red-400" size={32} />
+        <Card className="p-6 bg-card border flex items-center">
+          <div className="p-2 rounded-lg bg-destructive/10 mr-4">
+            <ShieldAlert className="text-destructive" size={32} />
+          </div>
           <div>
-            <h2 className="text-lg font-bold">Crime Reports</h2>
-            <p className="text-gray-900">{stats.totalPosts.toLocaleString()}</p>
+            <h2 className="text-lg font-bold text-card-foreground">Crime Reports</h2>
+            <p className="text-muted-foreground">{stats.totalPosts.toLocaleString()}</p>
           </div>
         </Card>
 
-        <Card className="p-6 bg-gray-300 rounded-lg flex items-center">
-          <MessageSquare className="mr-4 text-yellow-400" size={32} />
+        <Card className="p-6 bg-card border flex items-center">
+          <div className="p-2 rounded-lg bg-yellow-500/10 mr-4">
+            <MessageSquare className="text-yellow-500" size={32} />
+          </div>
           <div>
-            <h2 className="text-lg font-bold">Comments</h2>
-            <p className="text-gray-900">{stats.totalComments.toLocaleString()}</p>
+            <h2 className="text-lg font-bold text-card-foreground">Comments</h2>
+            <p className="text-muted-foreground">{stats.totalComments.toLocaleString()}</p>
           </div>
         </Card>
       </div>

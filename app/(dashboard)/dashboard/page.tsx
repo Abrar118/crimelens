@@ -215,7 +215,7 @@ export default function Dashboard() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock size={10} />
-                          {formatDistanceToNow(new Date(post.post_time), { addSuffix: true })}
+                          {(() => { const d = new Date(post.post_time); return isNaN(d.getTime()) ? "Unknown" : formatDistanceToNow(d, { addSuffix: true }); })()}
                         </span>
                       </div>
                     </div>

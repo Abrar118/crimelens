@@ -33,7 +33,7 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-6">
+    <div className="min-h-screen text-foreground p-4 md:p-6">
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -50,7 +50,7 @@ export default function NotificationsPage() {
         </div>
 
         {notifications.length === 0 ? (
-          <p className="text-center text-gray-400 py-16">No notifications yet</p>
+          <p className="text-center text-muted-foreground py-16">No notifications yet</p>
         ) : (
           notifications.map((notif) => {
             const Icon = TYPE_ICONS[notif.type] || Bell;
@@ -61,24 +61,24 @@ export default function NotificationsPage() {
                 key={notif.id}
                 className={`border cursor-pointer transition-colors ${
                   notif.read
-                    ? "bg-gray-900/30 border-gray-800"
-                    : "bg-gray-900 border-gray-600"
+                    ? "bg-muted/30 border-border"
+                    : "bg-card border-border"
                 }`}
                 onClick={() => markAsRead(notif.id)}
               >
                 <CardContent className="flex items-center gap-4 p-4">
                   <Icon size={20} className={color} />
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${notif.read ? "text-gray-400" : "text-white"}`}>
+                    <p className={`text-sm ${notif.read ? "text-muted-foreground" : "text-foreground"}`}>
                       {notif.message}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                     </p>
                   </div>
                   {notif.post_id && (
                     <Link href={`/crime-feed/${notif.post_id}`} onClick={(e) => e.stopPropagation()}>
-                      <ExternalLink size={16} className="text-gray-400 hover:text-white" />
+                      <ExternalLink size={16} className="text-muted-foreground hover:text-foreground" />
                     </Link>
                   )}
                   {!notif.read && (

@@ -10,7 +10,7 @@ import districtsData from "@/lib/data/districts.json";
 const LeafletMap = dynamic(() => import("./_components/LeafletMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[500px] rounded-lg overflow-hidden flex items-center justify-center bg-gray-800 text-gray-400">
+    <div className="w-full h-[500px] rounded-lg overflow-hidden flex items-center justify-center bg-muted text-muted-foreground">
       Loading map...
     </div>
   ),
@@ -72,15 +72,15 @@ export default function HeatmapPage() {
   }, []);
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-6">
+    <div className="min-h-screen text-foreground p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-4">
-        <Card className="border border-gray-700">
+        <Card className="border border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-primary text-xl md:text-2xl flex items-center">
                 <MapPin className="mr-2" size={28} /> Crime Heatmap
               </CardTitle>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-muted-foreground">
                 {totalReports} total reports across {locations.length} districts
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function HeatmapPage() {
             )}
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-4 text-sm text-gray-400">
+            <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
               <span className="font-medium">Density:</span>
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-green-500" /> Low
