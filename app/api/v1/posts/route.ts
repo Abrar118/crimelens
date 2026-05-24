@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ensureIndexes } from "@/lib/ensure-indexes";
 
 export async function GET(request: Request) {
+  await ensureIndexes();
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");

@@ -19,7 +19,26 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  useAuth();
+  const { role, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+
+  if (role !== "admin") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-red-400">Access Denied</h1>
+          <p className="text-gray-400">You need admin privileges to access this area.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await signOut(auth);

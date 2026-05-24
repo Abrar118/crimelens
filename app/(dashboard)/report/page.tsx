@@ -28,6 +28,8 @@ import apiClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { TiptapEditor } from "@/components/tiptap-editor";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -67,9 +69,48 @@ export default function ReportCrime() {
   const { role } = useAuth();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await apiClient.post("/posts", { ...values, description, is_anonymous: isAnonymous });
-    toast.success("Report submitted successfully.");
-    form.reset();
+    try {
+      const imageUrls: string[] = [];
+
+      // Upload images to Firebase Storage
+      if (values.image) {
+        for (let i = 0; i < values.image.length; i++) {
+          const file = values.image[i];
+          const timestamp = Date.now();
+          const storageRef = ref(storage, `posts/${timestamp}-${file.name}`);
+          const snapshot = await uploadBytesResumable(storageRef, file);
+          const url = await getDownloadURL(snapshot.ref);
+          imageUrls.push(url);
+        }
+      }
+
+      let videoUrl: string | undefined;
+      if (values.video?.[0]) {
+        const file = values.video[0];
+        const timestamp = Date.now();
+        const storageRef = ref(storage, `posts/${timestamp}-${file.name}`);
+        const snapshot = await uploadBytesResumable(storageRef, file);
+        videoUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      await apiClient.post("/posts", {
+        title: values.title,
+        description,
+        division: values.division,
+        district: values.district,
+        crime_time: values.crimeTime,
+        images: imageUrls,
+        video: videoUrl,
+        is_anonymous: isAnonymous,
+      });
+
+      toast.success("Report submitted successfully.");
+      form.reset();
+      setDescription("");
+      setIsAnonymous(false);
+    } catch (error) {
+      toast.error("Failed to submit report");
+    }
   }
 
   const handleGenerateAIDescription = async () => {

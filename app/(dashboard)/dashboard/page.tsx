@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PopoverContent } from "@radix-ui/react-popover";
 import Overview from "./_components/Overview";
 import {
@@ -14,15 +14,32 @@ import {
   npsData,
   satisfactionData,
 } from "@/lib/data/dashboard-dummy";
+import { getPosts } from "@/lib/api/posts";
 
 export default function Dashboard() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [stats, setStats] = useState({ totalPosts: 0, totalUpvotes: 0 });
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const data = await getPosts({ limit: 1 });
+        setStats({ totalPosts: data.total || 0, totalUpvotes: 0 });
+      } catch {}
+    }
+    loadStats();
+  }, []);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-background">
       {/* top section  */}
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground text-sm">
+            {stats.totalPosts} total crime reports in the system
+          </p>
+        </div>
         <div className="flex items-center justify-between space-x-2">
           <Popover>
             <PopoverTrigger asChild>
