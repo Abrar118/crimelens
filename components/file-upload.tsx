@@ -2,11 +2,10 @@
 
 import { useState, useRef } from "react";
 import imageCompression from "browser-image-compression";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, FileVideo, ImageIcon } from "lucide-react";
+import { auth } from "@/lib/firebase";
 
 interface FileUploadProps {
   storagePath: string;
@@ -82,26 +81,31 @@ export function FileUpload({
     }
 
     setUploading(true);
-    const timestamp = Date.now();
-    const storageRef = ref(storage, `${storagePath}/${timestamp}-${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, processedFile);
+    setProgress(30);
 
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-      },
-      (error) => {
-        console.error("Upload error:", error);
-        setUploading(false);
-        setProgress(0);
-      },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        setUploading(false);
-        onUploadComplete(url);
-      }
-    );
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const formData = new FormData();
+      formData.append("file", processedFile);
+
+      const response = await fetch("/api/v1/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      setProgress(100);
+      const { url } = await response.json();
+      setUploading(false);
+      onUploadComplete(url);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploading(false);
+      setProgress(0);
+      setFileName(null);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

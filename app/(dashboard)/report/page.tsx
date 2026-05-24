@@ -28,8 +28,7 @@ import apiClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { TiptapEditor } from "@/components/tiptap-editor";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -68,29 +67,37 @@ export default function ReportCrime() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const { role } = useAuth();
 
+  async function uploadFile(file: File): Promise<string> {
+    const token = await auth.currentUser?.getIdToken();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/v1/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Upload failed");
+    const { url } = await response.json();
+    return url;
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      toast.info("Uploading files...");
       const imageUrls: string[] = [];
 
-      // Upload images to Firebase Storage
       if (values.image) {
         for (let i = 0; i < values.image.length; i++) {
-          const file = values.image[i];
-          const timestamp = Date.now();
-          const storageRef = ref(storage, `posts/${timestamp}-${file.name}`);
-          const snapshot = await uploadBytesResumable(storageRef, file);
-          const url = await getDownloadURL(snapshot.ref);
+          const url = await uploadFile(values.image[i]);
           imageUrls.push(url);
         }
       }
 
       let videoUrl: string | undefined;
       if (values.video?.[0]) {
-        const file = values.video[0];
-        const timestamp = Date.now();
-        const storageRef = ref(storage, `posts/${timestamp}-${file.name}`);
-        const snapshot = await uploadBytesResumable(storageRef, file);
-        videoUrl = await getDownloadURL(snapshot.ref);
+        videoUrl = await uploadFile(values.video[0]);
       }
 
       await apiClient.post("/posts", {
