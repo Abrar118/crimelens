@@ -15,7 +15,22 @@ export async function GET(
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  return NextResponse.json(post);
+  let userVote: string | null = null;
+  const authHeader = request.headers.get("Authorization");
+  if (authHeader) {
+    try {
+      const decoded = await verifyAuth(request);
+      const vote = await db.collection("votes").findOne({
+        post_id: id,
+        user_id: decoded.uid,
+      });
+      userVote = vote?.type ?? null;
+    } catch {
+      // Not authenticated — userVote stays null
+    }
+  }
+
+  return NextResponse.json({ ...post, userVote });
 }
 
 export async function DELETE(

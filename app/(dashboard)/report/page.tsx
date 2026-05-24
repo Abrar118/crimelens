@@ -27,6 +27,7 @@ import { useState } from "react";
 import apiClient from "@/lib/api/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { TiptapEditor } from "@/components/tiptap-editor";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -61,11 +62,11 @@ export default function ReportCrime() {
     },
   });
 
-  const [description, setDescription] = useState<string | undefined>();
+  const [description, setDescription] = useState("");
   const { role } = useAuth();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await apiClient.post("/posts", values);
+    await apiClient.post("/posts", { ...values, description });
     toast.success("Report submitted successfully.");
     form.reset();
   }
@@ -76,7 +77,7 @@ export default function ReportCrime() {
     reader.onload = async (e) => {
       const base64Data = (e.target?.result as string).split(",")[1];
       const response = await generateImageDescription(base64Data, file.type);
-      setDescription(response);
+      setDescription(`<p>${response}</p>`);
     };
     reader.readAsDataURL(file);
   };
@@ -129,8 +130,13 @@ export default function ReportCrime() {
 
             {/* Description of the image when AI generate button is clicked */}
             {description && (
-              <div className="bg-gray-100 p-4 rounded-md">
-                <p>{description}</p>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium mb-2 block">Description (AI-generated, editable)</label>
+                <TiptapEditor
+                  content={description}
+                  onChange={setDescription}
+                  placeholder="Crime description..."
+                />
               </div>
             )}
 
