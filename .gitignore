@@ -28,3 +28,16 @@ dist-ssr
 .env.local
 .env.development
 .env.test
+
+# next.js
+/.next/
+/out/
+
+# env
+.env*.local
+
+# vercel
+.vercel
+
+# backup
+src-backup
