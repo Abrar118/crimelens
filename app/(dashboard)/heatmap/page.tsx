@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
+import { getPostLocations } from "@/lib/api/posts";
 import dynamic from "next/dynamic";
+import districtsData from "@/lib/data/districts.json";
 
-// Dynamically import the map to avoid SSR issues with leaflet
 const LeafletMap = dynamic(() => import("./_components/LeafletMap"), {
   ssr: false,
   loading: () => (
@@ -17,97 +16,105 @@ const LeafletMap = dynamic(() => import("./_components/LeafletMap"), {
   ),
 });
 
-// Dummy Crime Data
-const crimeReports = [
-  {
-    id: 1,
-    title: "Robbery",
-    severity: "high",
-    lat: 23.8103,
-    lon: 90.4125,
-    location: "Dhaka, Bangladesh",
-  },
-  {
-    id: 2,
-    title: "Cyber Fraud",
-    severity: "medium",
-    lat: 22.3569,
-    lon: 91.7832,
-    location: "Chattogram, Bangladesh",
-  },
-  {
-    id: 3,
-    title: "Street Theft",
-    severity: "low",
-    lat: 24.3636,
-    lon: 88.6241,
-    location: "Rajshahi, Bangladesh",
-  },
-];
+interface LocationData {
+  district: string;
+  division: string;
+  count: number;
+}
 
-const Heatmap: React.FC = () => {
-  const [crimeData, setCrimeData] = useState(crimeReports);
-  const [location, setLocation] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+interface MapLocation {
+  district: string;
+  division: string;
+  lat: number;
+  lng: number;
+  count: number;
+}
 
-  // Fetch User Location
+const districts = (districtsData as any)[2]?.data || [];
+
+function mapToCoordinates(locations: LocationData[]): MapLocation[] {
+  return locations
+    .map((loc) => {
+      const district = districts.find(
+        (d: any) => d.name.toLowerCase() === loc.district.toLowerCase()
+      );
+      if (!district) return null;
+      return {
+        district: loc.district,
+        division: loc.division,
+        lat: parseFloat(district.lat),
+        lng: parseFloat(district.lon),
+        count: loc.count,
+      };
+    })
+    .filter(Boolean) as MapLocation[];
+}
+
+export default function HeatmapPage() {
+  const [locations, setLocations] = useState<MapLocation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalReports, setTotalReports] = useState(0);
+
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation(
-          `Your Location: ${pos.coords.latitude}, ${pos.coords.longitude}`
-        );
-      },
-      () => {
-        setLocation("Location not available");
+    async function fetchData() {
+      try {
+        const data: LocationData[] = await getPostLocations();
+        const mapped = mapToCoordinates(data);
+        setLocations(mapped);
+        setTotalReports(data.reduce((sum, d) => sum + d.count, 0));
+      } catch {
+        setLocations([]);
+      } finally {
+        setLoading(false);
       }
-    );
+    }
+    fetchData();
   }, []);
-
-  // Function to fetch real-time crime data (Replace with API call)
-  const fetchCrimeData = async () => {
-    setLoading(true);
-    setTimeout(() => {
-      toast.success("Crime data updated!");
-      setLoading(false);
-    }, 2000);
-  };
 
   return (
     <div className="min-h-screen text-white p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-4">
         <Card className="border border-gray-700">
           <CardHeader>
-            <CardTitle className="text-primary text-xl md:text-2xl flex items-center">
-              <MapPin className="mr-2" size={28} /> Crime Heatmap
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-primary text-xl md:text-2xl flex items-center">
+                <MapPin className="mr-2" size={28} /> Crime Heatmap
+              </CardTitle>
+              <div className="text-sm text-gray-400">
+                {totalReports} total reports across {locations.length} districts
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {/* Location Display */}
-            <div className="bg-gray-800 text-yellow-400 p-3 rounded-lg flex items-center mb-4">
-              <AlertCircle className="mr-2" size={20} />
-              <span>{location}</span>
-            </div>
+            {loading ? (
+              <div className="w-full h-[500px] flex items-center justify-center">
+                <Loader2 className="animate-spin" size={32} />
+              </div>
+            ) : (
+              <div className="w-full h-[500px] rounded-lg overflow-hidden">
+                <LeafletMap locations={locations} />
+              </div>
+            )}
 
-            {/* Refresh Button */}
-            <Button
-              className="mb-4"
-              onClick={fetchCrimeData}
-              disabled={loading}
-            >
-              <RefreshCw className="mr-2" size={16} />{" "}
-              {loading ? "Updating..." : "Refresh Data"}
-            </Button>
-
-            {/* Crime Heatmap */}
-            <div className="w-full h-[500px] rounded-lg overflow-hidden">
-              <LeafletMap crimeData={crimeData} />
+            {/* Legend */}
+            <div className="flex items-center gap-4 mt-4 text-sm text-gray-400">
+              <span className="font-medium">Density:</span>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-green-500" /> Low
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-yellow-500" /> Medium
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-orange-500" /> High
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-red-600" /> Critical
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
   );
-};
-
-export default Heatmap;
+}

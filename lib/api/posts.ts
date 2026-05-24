@@ -41,3 +41,13 @@ export async function votePost(id: string, type: "up" | "down") {
   const { data } = await apiClient.post(`/posts/${id}/vote`, { type });
   return data;
 }
+
+export async function getPostLocations() {
+  const { data } = await apiClient.get("/posts/locations");
+  return data;
+}
+
+export async function getLeaderboard() {
+  const { data } = await apiClient.get("/leaderboard");
+  return data;
+}

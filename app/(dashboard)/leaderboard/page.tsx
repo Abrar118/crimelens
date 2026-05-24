@@ -1,156 +1,141 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Users, Trophy, RefreshCw, ChevronDown, Star } from "lucide-react";
+import {
+  Trophy,
+  Medal,
+  MessageCircle,
+  FileText,
+  Loader2,
+  Crown,
+} from "lucide-react";
+import { getLeaderboard } from "@/lib/api/posts";
+import { useAuth } from "@/hooks/use-auth";
 
-// Dummy Data for Leaderboard
-const leaderboardData = [
-  {
-    id: 1,
-    name: "Enamul Haque",
-    reports: 150,
-    upvotes: 240,
-    badge: "Elite Reporter",
-  },
-  {
-    id: 2,
-    name: "Sarah Rahman",
-    reports: 120,
-    upvotes: 200,
-    badge: "Expert Witness",
-  },
-  {
-    id: 3,
-    name: "Ayan Zaman",
-    reports: 98,
-    upvotes: 180,
-    badge: "Crime Analyst",
-  },
-  {
-    id: 4,
-    name: "Mehedi Hasan",
-    reports: 85,
-    upvotes: 150,
-    badge: "Senior Investigator",
-  },
-  {
-    id: 5,
-    name: "Maria Hossain",
-    reports: 75,
-    upvotes: 140,
-    badge: "Active Contributor",
-  },
-];
+interface LeaderboardEntry {
+  user_id: string;
+  name: string;
+  profile_image: string;
+  post_count: number;
+  comment_count: number;
+  score: number;
+}
 
-const Leaderboard: React.FC = () => {
-  const [sortedData, setSortedData] = useState(leaderboardData);
-  const [sortType, setSortType] = useState("reports");
+const RANK_STYLES: Record<number, { icon: typeof Trophy; color: string; bg: string }> = {
+  1: { icon: Crown, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
+  2: { icon: Medal, color: "text-gray-300", bg: "bg-gray-300/10 border-gray-300/30" },
+  3: { icon: Medal, color: "text-amber-600", bg: "bg-amber-600/10 border-amber-600/30" },
+};
 
-  // Sorting Function
-  const sortLeaderboard = (type: string) => {
-    let sorted = [...leaderboardData];
-    if (type === "reports") {
-      sorted = sorted.sort((a, b) => b.reports - a.reports);
-    } else {
-      sorted = sorted.sort((a, b) => b.upvotes - a.upvotes);
+export default function LeaderboardPage() {
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await getLeaderboard();
+        setEntries(data);
+      } catch {
+        setEntries([]);
+      } finally {
+        setLoading(false);
+      }
     }
-    setSortedData(sorted);
-    setSortType(type);
-    toast.success(
-      `Sorted by ${type === "reports" ? "Total Reports" : "Upvotes Received"}`
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="animate-spin" size={32} />
+      </div>
     );
-  };
+  }
 
   return (
     <div className="min-h-screen text-white p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
+      <div className="max-w-3xl mx-auto space-y-6">
         <Card className="border border-gray-700">
           <CardHeader>
             <CardTitle className="text-primary text-xl md:text-2xl flex items-center">
-              <Trophy className="mr-2" size={28} /> Crime Reporting Leaderboard
+              <Trophy className="mr-2 text-yellow-400" size={28} /> Top Contributors
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Sorting Options */}
-            <div className="flex justify-between items-center mb-4">
-              <Button
-                variant="outline"
-                className="text-blue-400 border-blue-500 hover:bg-blue-500 hover:text-black"
-                onClick={() => sortLeaderboard("reports")}
-              >
-                <ChevronDown className="mr-2" size={16} /> Sort by Reports
-              </Button>
-              <Button
-                variant="outline"
-                className="text-green-400 border-green-500 hover:bg-green-500 hover:text-black"
-                onClick={() => sortLeaderboard("upvotes")}
-              >
-                <ChevronDown className="mr-2" size={16} /> Sort by Upvotes
-              </Button>
-              <Button
-                variant="outline"
-                className="text-yellow-400 border-yellow-500 hover:bg-yellow-500 hover:text-black"
-                onClick={() => toast.info("Leaderboard Updated!")}
-              >
-                <RefreshCw className="mr-2" size={16} /> Refresh
-              </Button>
-            </div>
-
-            {/* Leaderboard Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse border border-gray-700">
-                <thead className="bg-gray-800 text-yellow-400">
-                  <tr>
-                    <th className="p-3">Rank</th>
-                    <th className="p-3">User</th>
-                    <th className="p-3">Total Reports</th>
-                    <th className="p-3">Upvotes</th>
-                    <th className="p-3">Badge</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedData?.map((user, index) => (
-                    <tr
-                      key={user.id}
-                      className="border-b border-gray-700 hover:bg-gray-200"
-                    >
-                      <td className="p-3 font-bold text-yellow-800">
-                        #{index + 1}
-                      </td>
-                      <td className="p-3 flex items-center">
-                        <Users className="mr-2 text-blue-300" size={20} />{" "}
-                        {user.name}
-                      </td>
-                      <td className="p-3">{user.reports}</td>
-                      <td className="p-3">{user.upvotes}</td>
-                      <td className="p-3">
-                        <Badge
-                          variant="outline"
-                          className="text-blue-300 border-blue-400 flex items-center"
-                        >
-                          <Star className="mr-1" size={14} /> {user.badge}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Bottom Note */}
-            <p className="text-gray-400 text-sm mt-4">
-              * Leaderboard updates every 24 hours. Report crimes responsibly!
+            <p className="text-sm text-gray-400 mt-1">
+              Score = Reports x 10 + Comments x 5
             </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {entries.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">No contributors yet</p>
+            ) : (
+              entries.map((entry, index) => {
+                const rank = index + 1;
+                const rankStyle = RANK_STYLES[rank];
+                const isCurrentUser = user?.uid === entry.user_id;
+
+                return (
+                  <div
+                    key={entry.user_id}
+                    className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
+                      isCurrentUser
+                        ? "bg-blue-500/10 border-blue-500/30"
+                        : rankStyle
+                        ? rankStyle.bg
+                        : "bg-gray-900/50 border-gray-700"
+                    }`}
+                  >
+                    {/* Rank */}
+                    <div className="w-10 text-center flex-shrink-0">
+                      {rankStyle ? (
+                        <rankStyle.icon size={24} className={rankStyle.color} />
+                      ) : (
+                        <span className="text-lg font-bold text-gray-400">#{rank}</span>
+                      )}
+                    </div>
+
+                    {/* Avatar + Name */}
+                    <Avatar className="w-10 h-10 flex-shrink-0">
+                      <AvatarImage src={entry.profile_image || "/images/avatar.jpg"} />
+                      <AvatarFallback>{entry.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">
+                        {entry.name}
+                        {isCurrentUser && (
+                          <span className="text-blue-400 text-xs ml-2">(You)</span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <FileText size={12} /> {entry.post_count} reports
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle size={12} /> {entry.comment_count} comments
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Score */}
+                    <Badge
+                      variant="outline"
+                      className={`text-sm font-bold flex-shrink-0 ${
+                        rankStyle ? rankStyle.color : "text-gray-300"
+                      }`}
+                    >
+                      {entry.score} pts
+                    </Badge>
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
-};
-
-export default Leaderboard;
+}

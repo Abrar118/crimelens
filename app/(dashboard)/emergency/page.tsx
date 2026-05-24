@@ -1,61 +1,93 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   PhoneCall,
   MessageCircle,
-  Search,
   MapPin,
-  AlertCircle,
+  AlertTriangle,
+  Shield,
+  Flame,
+  Heart,
+  Building,
+  Headphones,
 } from "lucide-react";
-import { toast } from "sonner";
+import { getDivisionsWithDistricts } from "@/lib/get-division-info";
+import {
+  nationalContacts,
+  divisionContacts,
+  type EmergencyContact,
+} from "@/lib/data/emergency-contacts";
 
-// Dummy Emergency Contacts (Can be replaced with API Data)
-const emergencyContacts = [
-  {
-    id: 1,
-    type: "Police",
-    number: "999",
-    location: "Bangladesh",
-    icon: <AlertCircle size={20} className="text-red-500" />,
-  },
-  {
-    id: 2,
-    type: "Fire Service",
-    number: "199",
-    location: "Bangladesh",
-    icon: <AlertCircle size={20} className="text-orange-500" />,
-  },
-  {
-    id: 3,
-    type: "Medical Emergency",
-    number: "16263",
-    location: "Bangladesh",
-    icon: <AlertCircle size={20} className="text-green-500" />,
-  },
-  {
-    id: 4,
-    type: "Cyber Crime",
-    number: "01766678888",
-    location: "Bangladesh",
-    icon: <AlertCircle size={20} className="text-blue-500" />,
-  },
-];
+const divisions = getDivisionsWithDistricts().map((d) => d.name);
 
-const Emergency: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredContacts, setFilteredContacts] = useState(emergencyContacts);
+const TYPE_CONFIG: Record<string, { icon: typeof Shield; color: string; label: string }> = {
+  police: { icon: Shield, color: "text-blue-400", label: "Police" },
+  fire: { icon: Flame, color: "text-orange-400", label: "Fire Service" },
+  ambulance: { icon: Heart, color: "text-red-400", label: "Ambulance" },
+  hospital: { icon: Building, color: "text-green-400", label: "Hospital" },
+  helpline: { icon: Headphones, color: "text-purple-400", label: "Helpline" },
+};
+
+function ContactCard({ contact }: { contact: EmergencyContact }) {
+  const config = TYPE_CONFIG[contact.type] || TYPE_CONFIG.helpline;
+  const Icon = config.icon;
+
+  return (
+    <Card className="bg-gray-900 border border-gray-700">
+      <CardContent className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <Icon size={20} className={config.color} />
+          <div>
+            <p className="font-medium text-white text-sm">{contact.name}</p>
+            <p className="text-gray-400 text-xs">{contact.number}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-green-400 border-green-500 hover:bg-green-500 hover:text-black"
+            asChild
+          >
+            <a href={`tel:${contact.number}`}>
+              <PhoneCall size={14} className="mr-1" /> Call
+            </a>
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-blue-400 border-blue-500 hover:bg-blue-500 hover:text-black"
+            asChild
+          >
+            <a href={`sms:${contact.number}`}>
+              <MessageCircle size={14} className="mr-1" /> SMS
+            </a>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function EmergencyPage() {
+  const [selectedDivision, setSelectedDivision] = useState("");
   const [userLocation, setUserLocation] = useState<string | null>(null);
 
-  // Function to get the user's location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (pos) => {
         setUserLocation(
-          `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`
+          `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`
         );
       },
       () => {
@@ -64,116 +96,94 @@ const Emergency: React.FC = () => {
     );
   }, []);
 
-  // Handle Search
-  useEffect(() => {
-    setFilteredContacts(
-      emergencyContacts.filter((contact) =>
-        contact.type.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm]);
+  const divisionData = divisionContacts.find(
+    (d) => d.division === selectedDivision
+  );
 
-  // Function to Call
-  const handleCall = (number: string) => {
-    toast.success(`Calling ${number}...`);
-    window.location.href = `tel:${number}`;
-  };
-
-  // Function to Send SMS
-  const handleMessage = (number: string) => {
-    toast.success(`Opening message to ${number}...`);
-    window.location.href = `sms:${number}`;
-  };
+  const groupedContacts: Record<string, EmergencyContact[]> = {};
+  if (divisionData) {
+    for (const c of divisionData.contacts) {
+      if (!groupedContacts[c.type]) groupedContacts[c.type] = [];
+      groupedContacts[c.type].push(c);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen text-white p-4 md:p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-red-400 flex items-center">
-            <AlertCircle className="mr-2" size={28} /> Emergency Contacts
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-red-400" size={28} />
+          <h1 className="text-2xl md:text-3xl font-bold text-red-400">
+            Emergency Contacts
           </h1>
         </div>
 
         {/* Location */}
-        <div className="bg-gray-800 text-yellow-400 p-3 rounded-lg flex items-center mb-4">
-          <MapPin className="mr-2" size={20} />
-          <span className="text-sm md:text-base">{userLocation}</span>
+        <div className="bg-gray-800 text-yellow-400 p-3 rounded-lg flex items-center">
+          <MapPin className="mr-2 flex-shrink-0" size={20} />
+          <span className="text-sm">{userLocation}</span>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-4 w-full">
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-2.5 text-gray-500"
-              size={18}
-            />
-            <Input
-              type="text"
-              placeholder="Search emergency contacts..."
-              className="pl-10 bg-gray-900 text-white border-gray-700 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* National Emergency Numbers */}
+        <Card className="border-2 border-red-500/30 bg-red-950/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-red-400 text-lg flex items-center gap-2">
+              <AlertTriangle size={20} /> National Emergency Numbers
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {nationalContacts.map((contact, i) => (
+              <ContactCard key={i} contact={contact} />
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Division Selector */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400">Select Division:</span>
+          <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+            <SelectTrigger className="w-48 bg-gray-900 text-white border-gray-700">
+              <SelectValue placeholder="Choose division" />
+            </SelectTrigger>
+            <SelectContent>
+              {divisions.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Division-specific Contacts */}
+        {selectedDivision && divisionData && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white">
+              {selectedDivision} Division
+            </h2>
+            {Object.entries(groupedContacts).map(([type, contacts]) => {
+              const config = TYPE_CONFIG[type];
+              return (
+                <div key={type}>
+                  <h3 className={`text-sm font-medium mb-2 ${config?.color || "text-gray-400"}`}>
+                    {config?.label || type}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {contacts.map((contact, i) => (
+                      <ContactCard key={i} contact={contact} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        )}
 
-        {/* Emergency Contacts Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filteredContacts.length > 0 ? (
-            filteredContacts.map((contact) => (
-              <Card
-                key={contact.id}
-                className="bg-gray-900 border border-gray-700"
-              >
-                <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-                  <div className="flex items-center space-x-4">
-                    {contact.icon}
-                    <div>
-                      <CardTitle className="text-white">
-                        {contact.type}
-                      </CardTitle>
-                      <p className="text-gray-400 text-sm">{contact.number}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-                  <span className="text-gray-400 text-sm">
-                    {contact.location}
-                  </span>
-
-                  {/* Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-400 border-green-500 hover:bg-green-500 hover:text-black"
-                      onClick={() => handleCall(contact.number)}
-                    >
-                      <PhoneCall className="mr-1" size={16} /> Call
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-blue-400 border-blue-500 hover:bg-blue-500 hover:text-black"
-                      onClick={() => handleMessage(contact.number)}
-                    >
-                      <MessageCircle className="mr-1" size={16} /> Message
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center text-gray-400">
-              No matching contacts found.
-            </p>
-          )}
-        </div>
+        {selectedDivision && !divisionData && (
+          <p className="text-gray-400 text-center py-8">
+            No specific contacts available for this division. Use national numbers above.
+          </p>
+        )}
       </div>
     </div>
   );
-};
-
-export default Emergency;
+}
