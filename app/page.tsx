@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuthStore } from "@/lib/store";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const setUser = useAuthStore((state) => state.setUser);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +47,22 @@ export default function LoginPage() {
       toast.error(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      toast.success("Password reset email sent. Check your inbox.");
+      setShowForgotPassword(false);
+      setResetEmail("");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to send reset email";
+      toast.error(message);
     }
   };
 
@@ -95,6 +113,42 @@ export default function LoginPage() {
                 Remember Me
               </label>
             </div>
+
+            {showForgotPassword ? (
+              <div className="mb-4 space-y-3">
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="Enter your email for reset"
+                  className="w-full p-3 rounded-md border border-[#4f576f] bg-[#1f2a40] text-[#f0f6ff] focus:bg-[#0f0f0f] transition-all"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="flex-1 p-2 rounded-md bg-[#66fcf1] text-[#131a30] font-bold hover:opacity-90 transition-all"
+                  >
+                    Send Reset Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(false)}
+                    className="p-2 rounded-md border border-[#4f576f] text-gray-300 hover:bg-[#1f2a40] transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-[#66fcf1] text-sm mb-4 hover:underline text-left"
+              >
+                Forgot Password?
+              </button>
+            )}
 
             <div className="flex gap-4">
               <button

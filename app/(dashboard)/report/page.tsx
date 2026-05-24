@@ -26,6 +26,7 @@ import { generateImageDescription } from "@/lib/ai-generate";
 import { useState } from "react";
 import apiClient from "@/lib/api/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -61,6 +62,7 @@ export default function ReportCrime() {
   });
 
   const [description, setDescription] = useState<string | undefined>();
+  const { role } = useAuth();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await apiClient.post("/posts", values);
@@ -78,6 +80,19 @@ export default function ReportCrime() {
     };
     reader.readAsDataURL(file);
   };
+
+  if (role === "unverified") {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-semibold text-destructive">Access Restricted</h2>
+          <p className="text-muted-foreground">
+            Verify your account to report crimes. Complete phone verification to unlock this feature.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 bg-background">

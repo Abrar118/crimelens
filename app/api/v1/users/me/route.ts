@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyAuth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { getAuth } from "firebase-admin/auth";
+import { initAdmin } from "@/lib/firebase-admin";
 
 export async function GET(request: Request) {
   try {
@@ -41,6 +43,9 @@ export async function POST(request: Request) {
       },
       { upsert: true }
     );
+
+    initAdmin();
+    await getAuth().setCustomUserClaims(decoded.uid, { role: "verified" });
 
     return NextResponse.json({ status: "success" }, { status: 201 });
   } catch (error) {

@@ -11,8 +11,17 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { navMain } from "@/lib/data/sidebar";
+import { useAuthStore } from "@/lib/store";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const user = useAuthStore((state) => state.user);
+
+  const userData = {
+    name: user?.displayName ?? user?.email?.split("@")[0] ?? "User",
+    email: user?.email ?? "",
+    avatar: user?.photoURL ?? "/images/avatar.jpg",
+  };
+
   return (
     <Sidebar collapsible="icon" {...props} variant="floating" side="left">
       <SidebarHeader>
@@ -24,7 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{ name: "User", email: "user@example.com", avatar: "/images/avatar.jpg" }} />
+        <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

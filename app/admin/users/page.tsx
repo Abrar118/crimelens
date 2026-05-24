@@ -12,69 +12,79 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Ban, Eye, Search } from "lucide-react";
+import { Ban, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { getAllUsers, banUser, unbanUser } from "@/lib/api/admin";
 
-const dummyUsers = [
-  {
-    id: 1,
-    name: "Abrar",
-    email: "abrar@gmail.com",
-    role: "User",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "binti",
-    email: "binti@example.com",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Maarzun",
-    email: "maarzun@gmail.com",
-    role: "User",
-    status: "Banned",
-  },
-  {
-    id: 4,
-    name: "Hum",
-    email: "Hum@gmail.com",
-    role: "User",
-    status: "Banned",
-  },
-];
+interface UserRecord {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  disabled: boolean;
+  phone?: string;
+}
 
-const Users: React.FC = () => {
-  const [users, setUsers] = useState(dummyUsers);
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<UserRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Filter Users Based on Search
   useEffect(() => {
-    const filteredUsers = dummyUsers.filter((user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setUsers(filteredUsers);
-  }, [searchTerm]);
+    async function fetchUsers() {
+      try {
+        const data = await getAllUsers();
+        setUsers(data);
+      } catch {
+        toast.error("Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
 
-  // Handle Ban/Unban User
-  const handleBanToggle = (id: number) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === id
-          ? { ...user, status: user.status === "Active" ? "Banned" : "Active" }
-          : user
-      )
-    );
-    toast.success("User status updated!");
+  const handleBanToggle = async (userId: string, currentlyDisabled: boolean) => {
+    setActionLoading(userId);
+    try {
+      if (currentlyDisabled) {
+        await unbanUser(userId);
+        toast.success("User unbanned");
+      } else {
+        await banUser(userId);
+        toast.success("User banned");
+      }
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId ? { ...u, disabled: !currentlyDisabled } : u
+        )
+      );
+    } catch {
+      toast.error("Failed to update user status");
+    } finally {
+      setActionLoading(null);
+    }
   };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="animate-spin" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6">
       <h1 className="text-3xl font-bold mb-6">Manage Users</h1>
 
-      {/* Search Bar */}
       <div className="mb-4 flex items-center gap-3">
         <Search size={20} className="text-gray-400" />
         <Input
@@ -86,7 +96,6 @@ const Users: React.FC = () => {
         />
       </div>
 
-      {/* Users Table */}
       <Card className="overflow-hidden border border-gray-700">
         <Table>
           <TableHeader>
@@ -99,51 +108,50 @@ const Users: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id} className="hover:bg-gray-800">
-                <TableCell>{user.name}</TableCell>
+            {filteredUsers.map((user) => (
+              <TableRow key={user._id} className="hover:bg-gray-800">
+                <TableCell>{user.name || "—"}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell className="capitalize">{user.role}</TableCell>
                 <TableCell
                   className={`font-bold ${
-                    user.status === "Active" ? "text-green-400" : "text-red-400"
+                    user.disabled ? "text-red-400" : "text-green-400"
                   }`}
                 >
-                  {user.status}
+                  {user.disabled ? "Banned" : "Active"}
                 </TableCell>
-                <TableCell className="flex gap-3">
-                  {/* Ban/Unban Button */}
+                <TableCell>
                   <Button
                     size="sm"
                     variant="outline"
+                    disabled={actionLoading === user._id}
                     className={`border ${
-                      user.status === "Active"
-                        ? "border-red-400 text-red-400"
-                        : "border-green-400 text-green-400"
+                      user.disabled
+                        ? "border-green-400 text-green-400"
+                        : "border-red-400 text-red-400"
                     }`}
-                    onClick={() => handleBanToggle(user.id)}
+                    onClick={() => handleBanToggle(user._id, user.disabled)}
                   >
-                    <Ban className="mr-2" size={16} />
-                    {user.status === "Active" ? "Ban" : "Unban"}
-                  </Button>
-
-                  {/* View Profile Button */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-gray-400 text-gray-400"
-                  >
-                    <Eye className="mr-2" size={16} />
-                    View
+                    {actionLoading === user._id ? (
+                      <Loader2 className="animate-spin mr-2" size={16} />
+                    ) : (
+                      <Ban className="mr-2" size={16} />
+                    )}
+                    {user.disabled ? "Unban" : "Ban"}
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
+            {filteredUsers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-gray-400 py-8">
+                  No users found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Card>
     </div>
   );
-};
-
-export default Users;
+}
