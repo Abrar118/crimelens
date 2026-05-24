@@ -20,7 +20,7 @@ import { getMyProfile } from "@/lib/api/users";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthStore((state) => state.user);
   const { unreadCount } = useNotifications();
-  const [profileImage, setProfileImage] = useState("/images/avatar.jpg");
+  const [profileImage, setProfileImage] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
