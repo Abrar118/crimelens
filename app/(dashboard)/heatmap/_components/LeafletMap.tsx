@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import Link from "next/link";
@@ -27,9 +28,19 @@ function getRadius(count: number, maxCount: number): number {
 
 export default function LeafletMap({ locations }: { locations: MapLocation[] }) {
   const maxCount = Math.max(...locations.map((l) => l.count), 1);
+  const [mapKey, setMapKey] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      setMapKey((k) => k + 1);
+    };
+  }, []);
 
   return (
+    <div ref={containerRef} style={{ height: "100%", width: "100%" }}>
     <MapContainer
+      key={mapKey}
       center={[23.685, 90.3563]}
       zoom={7}
       style={{ height: "100%", width: "100%" }}
@@ -66,5 +77,6 @@ export default function LeafletMap({ locations }: { locations: MapLocation[] }) 
         </CircleMarker>
       ))}
     </MapContainer>
+    </div>
   );
 }
