@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     await signOut(auth);
     await fetch("/api/v1/auth/session", { method: "DELETE" });
-    router.push("/");
+    router.push("/login");
   };
 
   return (
