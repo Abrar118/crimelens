@@ -1,222 +1,399 @@
-"use client";
-
-import type React from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useAuthStore } from "@/lib/store";
-import { toast } from "sonner";
-import { Shield, Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import {
+  Shield,
+  Camera,
+  ThumbsUp,
+  Sparkles,
+  Map,
+  EyeOff,
+  Siren,
+  ArrowRight,
+  MapPin,
+  BadgeCheck,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const setUser = useAuthStore((state) => state.setUser);
+const features = [
+  {
+    icon: Camera,
+    title: "Report with evidence",
+    description:
+      "Attach photos and video of the scene when you file a report, with the exact location.",
+  },
+  {
+    icon: ThumbsUp,
+    title: "Community verification",
+    description:
+      "Verified residents upvote, downvote, and comment with proof, so genuine incidents rise to the top.",
+  },
+  {
+    icon: Sparkles,
+    title: "AI scene descriptions",
+    description:
+      "Uploaded images are described automatically by Gemini, keeping reports searchable and consistent.",
+  },
+  {
+    icon: Map,
+    title: "Crime heatmaps",
+    description:
+      "See where incidents cluster across divisions and districts, and follow trends over time.",
+  },
+  {
+    icon: EyeOff,
+    title: "Anonymous reporting",
+    description:
+      "Share what you witnessed without exposing your identity to other users.",
+  },
+  {
+    icon: Siren,
+    title: "Emergency escalation",
+    description:
+      "High-severity, verified reports route to the admin team for urgent follow-up.",
+  },
+];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+const trustItems = [
+  {
+    icon: EyeOff,
+    title: "Anonymous by default",
+    description: "Your identity is never shown to other users.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "OTP-verified accounts",
+    description: "Every account is verified with a phone code.",
+  },
+  {
+    icon: Camera,
+    title: "Evidence-backed",
+    description: "Photos, video, and AI scene descriptions attach to each report.",
+  },
+];
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill all the fields");
-      return;
-    }
+const steps = [
+  {
+    number: "01",
+    title: "Report",
+    description:
+      "File an incident with its location, what happened, and any photos or video you have.",
+  },
+  {
+    number: "02",
+    title: "Verify",
+    description:
+      "Verified neighbors confirm, challenge, and add proof to the report until the score is trustworthy.",
+  },
+  {
+    number: "03",
+    title: "Track",
+    description:
+      "Follow your reports and watch the district heatmap change as more evidence comes in.",
+  },
+];
 
-    try {
-      setLoading(true);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      setUser(userCredential.user);
-      const idToken = await userCredential.user.getIdToken();
-      const sessionRes = await fetch("/api/v1/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
+const feedRows = [
+  {
+    type: "Theft",
+    badge: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+    title: "Two-wheeler stolen outside a parking lot",
+    location: "Mirpur 10, Dhaka",
+    time: "2h ago",
+    score: "24",
+    proofs: 5,
+  },
+  {
+    type: "Assault",
+    badge: "border-red-500/20 bg-red-500/10 text-red-300",
+    title: "Group confrontation near the bus terminal",
+    location: "Uttara, Dhaka",
+    time: "5h ago",
+    score: "11",
+    proofs: 2,
+  },
+  {
+    type: "Traffic",
+    badge: "border-sky-500/20 bg-sky-500/10 text-sky-300",
+    title: "Car collision behind a stalled truck",
+    location: "Dhanmondi, Dhaka",
+    time: "8h ago",
+    score: "9",
+    proofs: 3,
+  },
+];
 
-      if (!sessionRes.ok) {
-        const err = await sessionRes.json().catch(() => ({}));
-        console.error("Session creation failed:", err);
-        toast.error(err.error || "Session creation failed");
-        setLoading(false);
-        return;
-      }
-
-      toast.success("Login Successful");
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Login failed";
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!resetEmail) {
-      toast.error("Please enter your email");
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(auth, resetEmail);
-      toast.success("Password reset email sent. Check your inbox.");
-      setShowForgotPassword(false);
-      setResetEmail("");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to send reset email";
-      toast.error(message);
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <div className="min-h-dvh flex items-center justify-center relative overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: "url(/images/loginbg.jpg)" }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1e]/90 via-[#0a0f1e]/80 to-[#0a0f1e]/90" />
-
-      <div className="relative z-10 w-full max-w-5xl mx-4 grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-sm">
-        {/* Left — Hero image panel */}
-        <div
-          className="hidden lg:flex flex-col justify-end p-10 bg-cover bg-center relative min-h-[560px]"
-          style={{ backgroundImage: "url(/images/loginbg.jpg)" }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          <div className="relative z-10 space-y-3">
-            <div className="flex items-center gap-2">
-              <Shield className="text-blue-400" size={28} />
-              <span className="text-2xl font-bold text-white tracking-tight">CrimeLens</span>
-            </div>
-            <p className="text-gray-300 text-sm max-w-xs leading-relaxed">
-              Report crimes, verify reports, and help keep your community safe.
-            </p>
-          </div>
-        </div>
-
-        {/* Right — Login form */}
-        <div className="bg-[#0f1629]/95 p-8 md:p-12 flex flex-col justify-center">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <Shield className="text-blue-400" size={24} />
-            <span className="text-xl font-bold text-white tracking-tight">CrimeLens</span>
-          </div>
-
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-          <p className="text-gray-400 text-sm mb-8">Sign in to your account to continue</p>
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-1.5">
-              <label htmlFor="email" className="text-sm font-medium text-gray-300">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-gray-300">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-gray-600 bg-white/5 text-blue-500 focus:ring-blue-500/50" />
-                <span className="text-sm text-gray-400">Remember me</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
-              >
-                Forgot password?
-              </button>
-            </div>
-
-            {showForgotPassword && (
-              <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4 space-y-3">
-                <p className="text-sm text-gray-300">Enter your email to receive a reset link</p>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input
-                    type="email"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors cursor-pointer"
-                  >
-                    Send Reset Link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(false)}
-                    className="px-4 py-2.5 rounded-lg border border-white/10 text-gray-300 text-sm hover:bg-white/5 transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+    <div className="min-h-dvh bg-[#0a0f1e] flex flex-col">
+      {/* Nav */}
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0a0f1e]/80 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Shield className="text-blue-400" size={22} aria-hidden />
+            <span className="text-lg font-bold text-white tracking-tight">CrimeLens</span>
+          </Link>
+          <nav className="flex items-center gap-4 sm:gap-6">
+            <a
+              href="#features"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors duration-200 motion-reduce:transition-none"
             >
-              {loading ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </form>
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors duration-200 motion-reduce:transition-none"
+            >
+              How it works
+            </a>
+            <Link
+              href="/login"
+              className="text-sm text-gray-400 hover:text-white transition-colors duration-200 motion-reduce:transition-none"
+            >
+              Sign in
+            </Link>
+            <ThemeToggle />
+            <Link
+              href="/signup"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors duration-200 motion-reduce:transition-none"
+            >
+              Get started
+            </Link>
+          </nav>
+        </div>
+      </header>
 
-          <p className="text-center text-gray-400 text-sm mt-8">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="relative overflow-hidden">
+          <div
+            className="pointer-events-none absolute -top-32 left-1/2 h-80 w-[40rem] -translate-x-1/2 rounded-full bg-blue-600/10 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-16 md:pt-24 md:pb-24">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300">
+                  <Shield size={12} className="text-blue-400" aria-hidden />
+                  Community-verified crime intelligence
+                </span>
+                <h1 className="mt-5 text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
+                  Report crimes.{" "}
+                  <span className="bg-gradient-to-r from-blue-400 to-sky-300 bg-clip-text text-transparent">
+                    Verify them together.
+                  </span>
+                </h1>
+                <p className="mt-5 text-lg text-gray-400 leading-relaxed max-w-xl">
+                  CrimeLens is a community platform for reporting crimes with evidence.
+                  Upvotes, downvotes, and proof-backed comments keep the feed honest, so
+                  residents know what is really happening around them.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors duration-200 motion-reduce:transition-none"
+                  >
+                    Create an account
+                    <ArrowRight size={18} aria-hidden />
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center px-5 py-3 rounded-lg border border-white/15 text-gray-200 font-medium hover:bg-white/5 hover:border-white/25 transition-colors duration-200 motion-reduce:transition-none"
+                  >
+                    Sign in
+                  </Link>
+                </div>
+                <p className="mt-6 text-sm text-gray-500">
+                  Reports can stay anonymous. Accounts are verified with phone OTP.
+                </p>
+              </div>
+
+              {/* Feed preview */}
+              <div className="relative">
+                <div
+                  className="pointer-events-none absolute -inset-6 rounded-2xl bg-blue-500/10 blur-2xl"
+                  aria-hidden
+                />
+                <div className="relative rounded-xl border border-white/10 bg-[#0f1629]">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                    <span className="text-sm font-medium text-white">Recent reports</span>
+                    <span className="text-[11px] uppercase tracking-widest text-gray-500">
+                      Dhaka
+                    </span>
+                  </div>
+                  <ul>
+                    {feedRows.map((row, index) => (
+                      <li
+                        key={row.title}
+                        className={`px-5 py-4 ${
+                          index < feedRows.length - 1 ? "border-b border-white/5" : ""
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <span
+                              className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${row.badge}`}
+                            >
+                              {row.type}
+                            </span>
+                            <p className="mt-2 text-sm font-medium text-white truncate">
+                              {row.title}
+                            </p>
+                            <p className="mt-1.5 flex items-center gap-1 text-xs text-gray-500">
+                              <MapPin size={12} aria-hidden />
+                              {row.location} · {row.time}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="flex items-center justify-end gap-1 text-sm text-blue-400">
+                              <ThumbsUp size={14} aria-hidden />
+                              {row.score}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">{row.proofs} proofs</p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="mt-3 text-center text-xs text-gray-600">
+                  A sample of the report feed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust strip */}
+        <section className="border-y border-white/5 bg-[#0c1120]">
+          <div className="mx-auto max-w-6xl px-4 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {trustItems.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 ring-1 ring-blue-400/20">
+                  <Icon className="text-blue-400" size={16} aria-hidden />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">{title}</h3>
+                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-20 md:py-28">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
+            Why CrimeLens
+          </p>
+          <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight text-white">
+            Built to be trusted
+          </h2>
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {features.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-white/10 bg-[#0f1629] p-5 transition-colors duration-200 hover:border-blue-400/30 hover:bg-[#111a33] motion-reduce:transition-none"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 ring-1 ring-blue-400/20">
+                  <Icon className="text-blue-400" size={18} aria-hidden />
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-sm text-gray-400 leading-relaxed">{description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how-it-works" className="border-t border-white/5 bg-[#0c1120]">
+          <div className="mx-auto max-w-6xl scroll-mt-24 px-4 py-20 md:py-28">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-400">
+              The workflow
+            </p>
+            <h2 className="mt-3 text-2xl md:text-3xl font-bold tracking-tight text-white">
+              How it works
+            </h2>
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {steps.map((step, index) => (
+                <div
+                  key={step.number}
+                  className="relative rounded-xl border border-white/10 bg-[#0f1629] p-6"
+                >
+                  {index < steps.length - 1 && (
+                    <span
+                      className="absolute top-1/2 -right-6 hidden h-px w-6 bg-gradient-to-r from-white/20 to-transparent md:block"
+                      aria-hidden
+                    />
+                  )}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-400/30 bg-blue-500/10 text-sm font-semibold text-blue-300 tabular-nums">
+                    {step.number}
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold text-white">{step.title}</h3>
+                  <p className="mt-2 text-sm text-gray-400 leading-relaxed">{step.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0f1629] px-6 py-16 text-center md:py-20">
+            <div
+              className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-blue-600/20 blur-3xl"
+              aria-hidden
+            />
+            <div className="relative">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
+                Keep your area safer
+              </h2>
+              <p className="mt-4 text-gray-400 max-w-xl mx-auto">
+                Join your neighborhood on CrimeLens. Sign up takes a minute — an email,
+                then a phone verification code.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors duration-200 motion-reduce:transition-none"
+                >
+                  Get started
+                  <ArrowRight size={18} aria-hidden />
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center px-5 py-3 rounded-lg border border-white/15 text-gray-200 font-medium hover:bg-white/5 hover:border-white/25 transition-colors duration-200 motion-reduce:transition-none"
+                >
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Shield className="text-blue-400" size={20} aria-hidden />
+            <span className="text-sm font-semibold text-white">CrimeLens</span>
+            <span className="text-sm text-gray-500">— crime reporting and community verification</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/login"
+              className="text-sm text-gray-400 hover:text-white transition-colors duration-200 motion-reduce:transition-none"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/signup"
+              className="text-sm text-gray-400 hover:text-white transition-colors duration-200 motion-reduce:transition-none"
+            >
               Create account
             </Link>
-          </p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function NavUser({
       setUser(null);
       await fetch("/api/v1/auth/session", { method: "DELETE" });
       toast.success("Logged out successfully");
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       toast.error("Failed to logout");
     }
